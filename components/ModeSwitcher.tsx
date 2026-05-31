@@ -36,7 +36,7 @@ export default function ModeSwitcher({
             onClick={() => onMode(m.id)}
             className={`inline-flex items-center gap-2 rounded-lg border px-4 min-h-12 text-sm transition-colors duration-fast ${
               on
-                ? "border-accent bg-accent text-accent-ink shadow-e1"
+                ? "border-accent bg-accent text-accent-ink glow-accent"
                 : "border-border bg-surface text-ink-muted hover:text-ink hover:border-border-strong"
             }`}
           >

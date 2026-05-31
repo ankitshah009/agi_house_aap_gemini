@@ -99,7 +99,7 @@ export default function AskAda({
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-ink-faint" aria-hidden="true" />
           <div>
-            <h3 className="text-sm font-semibold text-ink">Ask Ada</h3>
+            <h3 className="text-base font-bold leading-tight tracking-tight text-ink">Ask Ada</h3>
             <p className="text-xs text-ink-muted">Project-aware follow-up. Tailored to your work.</p>
           </div>
         </div>

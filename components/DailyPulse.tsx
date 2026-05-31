@@ -15,10 +15,10 @@ export default function DailyPulse({
   onDeepDive: (id: string) => void;
 }) {
   return (
-    <section className="rounded-lg border border-border bg-surface shadow-e1 p-5 md:p-6">
+    <section className="rounded-lg border border-border bg-surface card-depth p-5 md:p-6">
       <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div>
-          <h2 className="text-lg font-semibold text-ink">{brief.headline}</h2>
+          <h2 className="text-2xl font-bold leading-tight text-gradient">{brief.headline}</h2>
           <p className="text-xs text-ink-muted mt-0.5">
             Top {brief.signals.length} signals of the day, ranked by Pulse Score. Pick one to deep
             dive.
@@ -39,11 +39,11 @@ export default function DailyPulse({
                 onClick={() => onDeepDive(sig.id)}
                 aria-pressed={active}
                 className={`group flex w-full flex-col text-left rounded-lg border p-3.5 min-h-11 transition-colors duration-fast ${
-                  active ? "border-accent bg-accent-soft" : "border-border bg-surface hover:bg-surface-2"
+                  active ? "border-accent bg-accent-soft glow-accent" : "border-border bg-surface hover:bg-surface-2"
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-2xs font-mono text-ink-faint">
+                  <span className="text-2xs font-mono uppercase tracking-wider text-ink-faint">
                     #{i + 1} · {sig.category}
                   </span>
                   <span className="inline-flex items-center gap-1 text-xs font-semibold tnum text-ink">

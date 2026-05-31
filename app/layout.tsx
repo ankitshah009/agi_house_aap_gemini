@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono, Sora } from "next/font/google";
 import "./globals.css";
 
 // ONE primary sans (Inter — the de-facto product-UI typeface) + ONE mono (Geist Mono,
@@ -19,6 +19,14 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+// Display face for headings — geometric, premium, "AI-native". Paired with Inter body.
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-sora",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Ad AI Pulse — From Signal to Strategy",
   description:
@@ -29,7 +37,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-theme="dark" className={`${inter.variable} ${geistMono.variable}`}>
+    <html lang="en" data-theme="dark" className={`${inter.variable} ${geistMono.variable} ${sora.variable}`}>
       <body className="min-h-screen bg-canvas text-ink antialiased">{children}</body>
     </html>
   );

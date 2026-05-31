@@ -24,7 +24,7 @@ function BriefBlock({
 }) {
   return (
     <section>
-      <h3 className="text-xs font-medium text-ink-muted">{label}</h3>
+      <h3 className="text-2xs font-mono uppercase tracking-widest text-ink-faint">{label}</h3>
       <div className="mt-2 max-w-[68ch] text-[15px] leading-relaxed text-ink">
         {children}
       </div>
@@ -156,7 +156,7 @@ export default function MasterBrief({ brief, confidence }: MasterBriefProps) {
   const hasWatch = brief.whatToWatch.length > 0;
 
   return (
-    <article className="enter rounded-lg border border-border bg-surface p-6 shadow-e1 sm:p-8">
+    <article className="enter rounded-lg border border-border bg-surface p-6 card-depth sm:p-8">
       <div className="space-y-8">
         {/* Header band: title + verification trust layer. Verification sits top-right on
             wide screens, stacks under the brief on narrow. */}

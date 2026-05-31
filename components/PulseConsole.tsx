@@ -30,10 +30,10 @@ import ReadFocus from "./ReadFocus";
 
 // Active lens-filter chip colors (functional category color; static for Tailwind).
 const LENS_CHIP: Record<LensId, string> = {
-  strategist: "border-lens-strategist/50 bg-lens-strategist/10 text-lens-strategist",
-  executive: "border-lens-executive/50 bg-lens-executive/10 text-lens-executive",
-  gtm: "border-lens-gtm/50 bg-lens-gtm/10 text-lens-gtm",
-  policy: "border-lens-policy/50 bg-lens-policy/10 text-lens-policy",
+  strategist: "border-lens-strategist/50 bg-lens-strategist/10 text-lens-strategist glow-lens-strategist",
+  executive: "border-lens-executive/50 bg-lens-executive/10 text-lens-executive glow-lens-executive",
+  gtm: "border-lens-gtm/50 bg-lens-gtm/10 text-lens-gtm glow-lens-gtm",
+  policy: "border-lens-policy/50 bg-lens-policy/10 text-lens-policy glow-lens-policy",
 };
 
 // MasterBrief needs a full brief; synthesize from summary when the pipeline hasn't
@@ -229,7 +229,7 @@ export default function PulseConsole() {
                     onClick={() => setActiveLens("all")}
                     className={`min-h-9 rounded-full border px-3 text-xs font-medium transition-colors duration-fast ${
                       activeLens === "all"
-                        ? "border-accent bg-accent text-accent-ink"
+                        ? "border-accent bg-accent text-accent-ink glow-accent"
                         : "border-border bg-surface text-ink-muted hover:text-ink"
                     }`}
                   >
@@ -261,7 +261,7 @@ export default function PulseConsole() {
               />
 
               {/* Editorial sign-off + Now/Next/Later */}
-              <section className="rounded-lg border border-border bg-surface p-5 shadow-e1">
+              <section className="rounded-lg border border-border bg-surface p-5 card-depth">
                 <div className="flex items-center gap-2 text-sm">
                   <span className="font-medium text-ink">Editorial</span>
                   <span className="text-ink-muted">reviewed for clarity, hype, and duplicates.</span>

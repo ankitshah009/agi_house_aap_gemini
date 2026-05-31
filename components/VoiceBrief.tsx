@@ -167,7 +167,7 @@ export default function VoiceBrief({ brief }: VoiceBriefProps) {
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-semibold text-ink">
+              <h3 className="text-base font-bold leading-tight tracking-tight text-ink">
                 Rachel, Editor-in-Chief
               </h3>
               <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-2xs font-medium text-ink-faint">

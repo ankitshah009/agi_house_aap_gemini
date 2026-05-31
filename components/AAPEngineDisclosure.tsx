@@ -49,7 +49,7 @@ export default function AAPEngineDisclosure({
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 shrink-0 text-ink-muted" />
           <div>
-            <h4 className="text-sm font-semibold text-ink">AAP Engine trust registry</h4>
+            <h4 className="text-base font-bold leading-tight tracking-tight text-gradient">AAP Engine trust registry</h4>
             <p className="text-xs text-ink-muted">
               Provenance and cryptographic integrity stamp.
             </p>
@@ -61,7 +61,7 @@ export default function AAPEngineDisclosure({
       </div>
 
       <div className="mt-4">
-        <h5 className="mb-2 text-sm font-semibold text-ink">Aubric trust progression</h5>
+        <h5 className="mb-2 text-sm font-bold leading-tight tracking-tight text-ink">Aubric trust progression</h5>
 
         {/* Linear-style under-tab: active = text-ink + 2px accent underline indicator */}
         <div
@@ -106,7 +106,7 @@ export default function AAPEngineDisclosure({
       </div>
 
       <div className="mt-4 pt-1">
-        <h5 className="mb-2 text-sm font-semibold text-ink">
+        <h5 className="mb-2 text-sm font-bold leading-tight tracking-tight text-ink">
           Verified ingested sources{" "}
           <span className="text-2xs text-ink-faint tnum">({sources.length})</span>
         </h5>

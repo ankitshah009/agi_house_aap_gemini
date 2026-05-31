@@ -39,11 +39,11 @@ export default function ReadFocus({
 
   return (
     <section
-      className="enter rounded-lg border border-border bg-surface p-5 shadow-e1"
+      className="enter rounded-lg border border-border bg-surface p-5 card-depth"
       aria-label="Where to focus today"
     >
       <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
-        <h2 className="text-base font-semibold text-ink">Where to focus today</h2>
+        <h2 className="text-xl font-bold leading-tight tracking-tight text-gradient">Where to focus today</h2>
         <span className="text-2xs text-ink-faint">
           Ranked by {role ? `${role} relevance` : "Pulse Score"}
         </span>

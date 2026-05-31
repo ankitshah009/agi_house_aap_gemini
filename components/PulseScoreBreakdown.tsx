@@ -86,7 +86,7 @@ export default function PulseScoreBreakdown({ score }: PulseScoreBreakdownProps)
       {/* Composite header — restrained, not hero. */}
       <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
         <div>
-          <h3 className="text-sm font-medium text-ink">Pulse Score</h3>
+          <h3 className="text-base font-semibold leading-tight tracking-tight text-ink">Pulse Score</h3>
           <p className="mt-0.5 text-xs text-ink-muted">
             Composite of impact, novelty, urgency, relevance and confidence.
           </p>

@@ -12,9 +12,9 @@ export default function DailyBriefInfographic({ analysis }: { analysis: SignalAn
   return (
     <div className="enter rounded-lg border border-border bg-surface p-5 md:p-6 space-y-5 shadow-e1">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 text-2xs text-ink-faint">
+        <div className="flex items-center gap-2 text-2xs font-mono uppercase tracking-wider text-ink-faint">
           <Clock className="w-3.5 h-3.5 text-ink-faint" aria-hidden="true" />
-          60-second daily brief. {analysis.date}
+          60-second daily brief · {analysis.date}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-2xs text-ink-faint">Grounding</span>
@@ -23,7 +23,7 @@ export default function DailyBriefInfographic({ analysis }: { analysis: SignalAn
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold leading-tight text-ink">{analysis.title}</h2>
+        <h2 className="text-2xl font-bold leading-tight text-gradient">{analysis.title}</h2>
         <p className="text-sm text-ink-muted mt-1.5 leading-relaxed">{analysis.summary}</p>
       </div>
 

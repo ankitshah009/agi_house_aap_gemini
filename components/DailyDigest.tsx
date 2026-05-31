@@ -92,7 +92,7 @@ export default function DailyDigest({ brief, onDeepDive }: DailyDigestProps) {
 
   return (
     <article
-      className="enter rounded-lg border border-border bg-surface shadow-e1 overflow-hidden"
+      className="enter rounded-lg border border-border bg-surface card-depth overflow-hidden"
       aria-label="Today's digest: top three signals"
     >
       {/* ── 1. Header ─────────────────────────────────────────────────────── */}
@@ -100,12 +100,12 @@ export default function DailyDigest({ brief, onDeepDive }: DailyDigestProps) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 text-accent" aria-hidden="true" />
-            <h2 className="text-lg font-semibold text-ink leading-tight">Today&apos;s Digest</h2>
+            <h2 className="text-xl font-bold leading-tight text-gradient">Today&apos;s Digest</h2>
           </div>
           <p className="text-xs text-ink-muted">3 signals that matter</p>
         </div>
         <time
-          className="text-2xs font-mono text-ink-faint shrink-0 mt-0.5"
+          className="text-2xs font-mono uppercase tracking-wider text-ink-faint shrink-0 mt-0.5"
           dateTime={brief.date}
         >
           {brief.date}
@@ -200,7 +200,7 @@ export default function DailyDigest({ brief, onDeepDive }: DailyDigestProps) {
 
         {/* ── 5. What to do today ───────────────────────────────────────────── */}
         <section aria-label="What to do today">
-          <h3 className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-2.5">
+          <h3 className="text-2xs font-mono uppercase tracking-wider text-ink-faint mb-2.5">
             What to do today
           </h3>
           <ul className="space-y-2">

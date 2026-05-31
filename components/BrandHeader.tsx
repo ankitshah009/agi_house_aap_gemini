@@ -15,8 +15,8 @@ export default function BrandHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-30 border-b border-border bg-surface px-6 py-4 transition-shadow${
-        scrolled ? " shadow-e1" : ""
+      className={`sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur-md px-6 py-4 transition-shadow${
+        scrolled ? " shadow-e2" : ""
       }`}
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -24,12 +24,12 @@ export default function BrandHeader() {
           <div className="flex items-center gap-2.5">
             <AapLogo />
             <span aria-hidden="true" className="h-5 w-px bg-border-strong" />
-            <h1 className="text-xl font-bold tracking-tight text-ink">
+            <h1 className="text-2xl font-extrabold leading-tight text-gradient">
               Ad AI Pulse
             </h1>
           </div>
           <p className="mt-1 text-sm text-ink-muted">
-            From signal to strategy.{" "}
+            <span className="text-gradient font-medium">From signal to strategy.</span>{" "}
             <span className="text-ink-faint">AI-native adtech intelligence.</span>
           </p>
         </div>
@@ -39,7 +39,7 @@ export default function BrandHeader() {
             <span className="status-live h-1.5 w-1.5 rounded-full bg-success" />
             <span className="text-2xs text-ink-muted">Ada active</span>
           </span>
-          <span className="hidden text-2xs text-ink-faint sm:inline">
+          <span className="hidden text-2xs font-mono uppercase tracking-wider text-ink-faint sm:inline">
             Reviewed by the AAP Engine
           </span>
         </div>

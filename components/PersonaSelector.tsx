@@ -8,10 +8,10 @@ import type { LensId } from "@/lib/types";
 export type Persona = "all" | LensId;
 
 const CHIP: Record<LensId, string> = {
-  strategist: "border-lens-strategist/50 bg-lens-strategist/10 text-lens-strategist",
-  executive: "border-lens-executive/50 bg-lens-executive/10 text-lens-executive",
-  gtm: "border-lens-gtm/50 bg-lens-gtm/10 text-lens-gtm",
-  policy: "border-lens-policy/50 bg-lens-policy/10 text-lens-policy",
+  strategist: "border-lens-strategist/50 bg-lens-strategist/10 text-lens-strategist glow-lens-strategist",
+  executive: "border-lens-executive/50 bg-lens-executive/10 text-lens-executive glow-lens-executive",
+  gtm: "border-lens-gtm/50 bg-lens-gtm/10 text-lens-gtm glow-lens-gtm",
+  policy: "border-lens-policy/50 bg-lens-policy/10 text-lens-policy glow-lens-policy",
 };
 
 export default function PersonaSelector({
@@ -31,7 +31,7 @@ export default function PersonaSelector({
         aria-pressed={persona === "all"}
         className={`min-h-9 rounded-full border px-3 text-xs font-medium transition-colors duration-fast ${
           persona === "all"
-            ? "border-accent bg-accent text-accent-ink"
+            ? "border-accent bg-accent text-accent-ink glow-accent"
             : "border-border bg-surface text-ink-muted hover:text-ink"
         }`}
       >

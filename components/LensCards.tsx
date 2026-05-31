@@ -71,7 +71,7 @@ export default function LensCards({
         return (
           <article
             key={card.lens}
-            className={`enter flex flex-col overflow-hidden rounded-lg border ${s.border} bg-surface shadow-e1`}
+            className={`enter flex flex-col overflow-hidden rounded-lg border ${s.border} bg-surface card-depth`}
           >
             {/* Colored identity header */}
             <header className={`flex items-start justify-between gap-3 border-b ${s.border} ${s.headerBg} px-4 py-3`}>
@@ -82,7 +82,7 @@ export default function LensCards({
                   <Icon className="h-4.5 w-4.5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <div className={`text-sm font-semibold ${s.text}`}>{meta.role}</div>
+                  <div className={`text-base font-bold leading-tight tracking-tight ${s.text}`}>{meta.role}</div>
                   <div className="text-2xs text-ink-muted">{card.title}</div>
                 </div>
               </div>

@@ -12,6 +12,7 @@
   /* ---- Type ---- */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* Fixed rem scale, ratio ~1.2 (major second / minor third blend). NOT fluid. */
   --text-2xs: 0.6875rem;   /* 11px — meta/labels floor (still >=4.5:1 on surface) */
@@ -20,8 +21,8 @@
   --text-base: 0.9375rem;  /* 15px — reading body */
   --text-lg: 1.125rem;     /* 18px */
   --text-xl: 1.375rem;     /* 22px */
-  --text-2xl: 1.625rem;    /* 26px */
-  --text-3xl: 2rem;        /* 32px */
+  --text-2xl: 1.75rem;     /* 28px */
+  --text-3xl: 2.25rem;     /* 36px — hero display */
   --text-2xs--line-height: 1rem;
   --text-xs--line-height: 1.1rem;
   --text-sm--line-height: 1.25rem;
@@ -119,6 +120,11 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  /* Display face on prominent headings (h1/h2); body + labels stay in the sans. */
+  :where(h1, h2) {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
   /* Single, consistent focus-visible ring tuned to the surface. */
   :where(a, button, input, textarea, select, [tabindex]):focus-visible {
     outline: 2px solid var(--color-accent);
@@ -146,16 +152,67 @@
    ============================================================ */
 
 /* Neon aurora canvas — soft lens-colored radial glows on the dark page (the brand
-   design language: violet=strategist, blue=executive, cyan=gtm, gold=policy). */
+   design language: violet=strategist, blue=executive, cyan=gtm, gold=policy).
+   Dark-mode values are intentionally richer (higher chroma, slightly more spread)
+   so the gradient reads as premium atmosphere rather than a muddy wash. */
 @utility bg-canvas {
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(46% 42% at 5% -8%, oklch(62% 0.22 285 / 0.30), transparent 60%),
-    radial-gradient(40% 40% at 99% 6%, oklch(64% 0.19 245 / 0.24), transparent 58%),
-    radial-gradient(44% 42% at 94% 98%, oklch(72% 0.16 195 / 0.22), transparent 60%),
-    radial-gradient(50% 44% at 28% 110%, oklch(74% 0.16 70 / 0.18), transparent 62%);
+    radial-gradient(52% 48% at 4% -6%, oklch(62% 0.26 285 / 0.36), transparent 58%),
+    radial-gradient(44% 44% at 100% 4%, oklch(64% 0.22 245 / 0.28), transparent 56%),
+    radial-gradient(40% 38% at 96% 100%, oklch(72% 0.18 195 / 0.22), transparent 58%),
+    radial-gradient(48% 42% at 26% 112%, oklch(74% 0.18 70 / 0.18), transparent 60%);
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+/* Brand gradient text — violet → indigo → blue (the AAP signature).
+   Use on brand moments only: taglines, eyebrows, hero labels. */
+@utility text-gradient {
+  background-image: linear-gradient(115deg, #a855f7 0%, #6366f1 48%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Accent glow — a soft brand-violet box-shadow for ACTIVE / SELECTED elements.
+   Intentionally restrained: 0 spread, modest blur, mid-low opacity.
+   Decorative ONLY — never the sole indicator of state (borders + aria remain). */
+@utility glow-accent {
+  box-shadow: 0 0 0 1px oklch(72% 0.2 272 / 0.55),
+              0 0 14px 0 oklch(62% 0.26 285 / 0.35),
+              0 2px 8px 0 oklch(0% 0 0 / 0.3);
+}
+
+/* Lens-tinted glow variants for per-lens active chips.
+   Each variant matches its lens hue from the token system. */
+@utility glow-lens-strategist {
+  box-shadow: 0 0 0 1px oklch(56% 0.15 285 / 0.6),
+              0 0 12px 0 oklch(56% 0.15 285 / 0.3),
+              0 2px 6px 0 oklch(0% 0 0 / 0.28);
+}
+@utility glow-lens-executive {
+  box-shadow: 0 0 0 1px oklch(55% 0.13 245 / 0.6),
+              0 0 12px 0 oklch(55% 0.13 245 / 0.3),
+              0 2px 6px 0 oklch(0% 0 0 / 0.28);
+}
+@utility glow-lens-gtm {
+  box-shadow: 0 0 0 1px oklch(55% 0.1 195 / 0.6),
+              0 0 12px 0 oklch(55% 0.1 195 / 0.3),
+              0 2px 6px 0 oklch(0% 0 0 / 0.28);
+}
+@utility glow-lens-policy {
+  box-shadow: 0 0 0 1px oklch(60% 0.12 70 / 0.6),
+              0 0 12px 0 oklch(60% 0.12 70 / 0.3),
+              0 2px 6px 0 oklch(0% 0 0 / 0.28);
+}
+
+/* 1px inset top-edge highlight for cards on dark surfaces —
+   gives cards a sense of depth and catches the ambient light from the aurora. */
+@utility card-depth {
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.06),
+              0 1px 2px oklch(0% 0 0 / 0.4),
+              0 4px 12px oklch(0% 0 0 / 0.45);
 }
 
 /* Quiet entrance for newly-rendered content. ONE earned reveal. */
