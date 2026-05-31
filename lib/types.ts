@@ -137,6 +137,25 @@ export interface SignalAnalysis {
   scoutSourceCount?: number; // Agent 1 telemetry
 }
 
+// ── Daily brief: the top signals of the day (Signal Scout output) ──
+export interface DailyBrief {
+  date: string;
+  headline: string;
+  signals: SignalAnalysis[]; // top 3-5, ranked
+}
+
+// ── Project-aware Ada: the user's role + active project, sent with each question ──
+export interface UserProfile {
+  role: string;
+  project: string;
+}
+
+// ── Nano Banana infographic for a signal ──
+export interface Infographic {
+  dataUrl: string; // data:image/png;base64,... or a placeholder flag
+  alt: string;
+}
+
 // Engine backends behind one interface:
 //  cached -> local fixtures (bulletproof)
 //  fast   -> gemini-2.5-flash structured output

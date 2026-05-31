@@ -110,10 +110,10 @@ Score SIX axes independently, each 0-100 (do NOT make them all similar — a gre
  - audienceRelevance: relevance to AAP readers (agency strategists, execs, AdTech/GTM, AI policy). Niche-but-irrelevant scores low.
  - confidence: use the provided Verification confidence; do not exceed it.
 
-Then compute composite (0-100) as a confidence-discounted weighted blend:
-  base = 0.28*adtechImpact + 0.22*aiImpact + 0.16*novelty + 0.16*urgency + 0.18*audienceRelevance
-  composite = round(base * (confidence / 100))
-A low-confidence signal CANNOT rank high — that is intentional. Return integers only.`;
+Also return a composite (0-100). NOTE: the engine RECOMPUTES the authoritative composite in code from your six axes as a weighted average that confidence lightly nudges (not crushes):
+  weightedAvg = 0.25*adtechImpact + 0.20*aiImpact + 0.20*audienceRelevance + 0.15*urgency + 0.10*novelty + 0.10*confidence
+  composite = round(weightedAvg * (0.7 + 0.3*confidence/100))
+So spend your effort scoring the six axes accurately and honestly; confidence nudges the final score, it does not gut a well-supported signal. Return integers only.`;
 
 export const SCHEMA_RANK = {
   type: "OBJECT",
@@ -137,7 +137,7 @@ export const SCHEMA_RANK = {
   ],
 } as const;
 
-export const JSON_CONTRACT_RANK = `OUTPUT CONTRACT: one fenced \`\`\`json block only. Keys: adtechImpact, aiImpact, novelty, urgency, audienceRelevance, confidence, composite (all integers 0-100). composite must follow the confidence-discounted formula. No commentary.`;
+export const JSON_CONTRACT_RANK = `OUTPUT CONTRACT: one fenced \`\`\`json block only. Keys: adtechImpact, aiImpact, novelty, urgency, audienceRelevance, confidence, composite (all integers 0-100). The engine recomputes the authoritative composite from the six axes; score the axes accurately. No commentary.`;
 
 // ════════════════════════════════════════════════════════════════════════════
 // AGENT 4 — BRIEFING  (fast structured; the master brief)

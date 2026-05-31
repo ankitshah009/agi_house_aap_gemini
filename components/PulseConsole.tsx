@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LayoutGrid, Gauge, Clapperboard, AlertTriangle } from "lucide-react";
 import { CURATED_SIGNALS } from "@/lib/data";
+import { TODAY } from "@/lib/daily";
 import { LENSES } from "@/lib/lenses";
 import type { EngineMode, LensId, MasterBrief as MasterBriefData, SignalAnalysis } from "@/lib/types";
 import { usePulseStream } from "@/hooks/usePulseStream";
@@ -20,13 +21,15 @@ import ShortFormReel from "./ShortFormReel";
 import AudioBriefing from "./AudioBriefing";
 import AskAda from "./AskAda";
 import AAPEngineDisclosure from "./AAPEngineDisclosure";
+import DailyPulse from "./DailyPulse";
+import InfographicCard from "./InfographicCard";
 
 type View = "cards" | "brief" | "reel";
 
 const VIEWS: { id: View; label: string; icon: typeof LayoutGrid }[] = [
   { id: "cards", label: "Pulse Cards", icon: LayoutGrid },
   { id: "brief", label: "60s Brief", icon: Gauge },
-  { id: "reel", label: "Reel", icon: Clapperboard },
+  { id: "reel", label: "Video Brief", icon: Clapperboard },
 ];
 
 // Active lens-filter chip colors (functional category color; static for Tailwind).
@@ -64,6 +67,7 @@ export default function PulseConsole() {
   const [activeLens, setActiveLens] = useState<"all" | LensId>("all");
   const [customSignals, setCustomSignals] = useState<SignalAnalysis[]>([]);
   const pendingCustomRef = useRef(false);
+  const detailRef = useRef<HTMLElement | null>(null);
 
   const analysis = stream.analysis;
   const busy = stream.phase === "reasoning";
@@ -84,6 +88,13 @@ export default function PulseConsole() {
     const custom = customSignals.find((s) => s.id === id);
     if (custom) stream.show(custom);
     else stream.run({ signalId: id, mode });
+  };
+
+  const onDeepDive = (id: string) => {
+    onSelect(id);
+    requestAnimationFrame(() =>
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
   };
 
   const onPlayground = (text: string) => {
@@ -112,7 +123,14 @@ export default function PulseConsole() {
         </div>
       </div>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-6">
+        <DailyPulse brief={TODAY} selectedId={selectedId} onDeepDive={onDeepDive} />
+      </div>
+
+      <main
+        ref={detailRef}
+        className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6"
+      >
         {/* LEFT RAIL */}
         <div className="lg:col-span-4 flex flex-col gap-5">
           <SignalFeed
@@ -154,6 +172,12 @@ export default function PulseConsole() {
           </div>
 
           <MasterBrief brief={brief} confidence={analysis.confidence} />
+          <InfographicCard
+            key={analysis.id}
+            title={analysis.title}
+            summary={analysis.summary}
+            brief={brief.whatHappened}
+          />
           {analysis.pulseScore && <PulseScoreBreakdown score={analysis.pulseScore} />}
 
           {/* View tabs (Linear under-tab indicator) */}

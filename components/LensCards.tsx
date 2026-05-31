@@ -63,7 +63,7 @@ export default function LensCards({
   const visible = activeLens === "all" ? cards : cards.filter((c) => c.lens === activeLens);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="flex flex-col gap-4">
       {visible.map((card) => {
         const meta = LENS_BY_ID[card.lens];
         const Icon = LENS_ICON[card.lens];

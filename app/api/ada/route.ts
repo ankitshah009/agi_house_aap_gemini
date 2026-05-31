@@ -16,11 +16,17 @@ export async function POST(req: NextRequest) {
   }
   const question = typeof body.question === "string" ? body.question.trim() : "";
   const context = typeof body.context === "string" ? body.context : "";
+  const profile = (body.profile ?? {}) as { role?: string; project?: string };
   if (!question) {
     return Response.json({ error: "Missing question" }, { status: 400 });
   }
 
-  const user = `BRIEF CONTEXT:\n${context}\n\nFOLLOW-UP QUESTION: ${question}\n\nAnswer as Ada, concisely and tactically.`;
+  const who =
+    profile.role || profile.project
+      ? `THE PERSON ASKING: role = ${profile.role || "(unspecified)"}; current project = ${profile.project || "(unspecified)"}. Tailor your answer to THIS person's role and project specifically, and be concrete about what they should do for their project.\n\n`
+      : "";
+
+  const user = `${who}BRIEF CONTEXT:\n${context}\n\nFOLLOW-UP QUESTION: ${question}\n\nAnswer as Ada: concise, tactical, tailored to the person above when provided.`;
 
   try {
     const answer = await generateText(SYSTEM, user, 40_000);

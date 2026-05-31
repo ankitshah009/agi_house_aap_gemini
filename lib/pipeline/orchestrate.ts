@@ -389,16 +389,24 @@ function normalizeConfidence(obj: Record<string, unknown>): Confidence {
 }
 
 function normalizeRank(obj: Record<string, unknown>, confidenceFloor: number): PulseScore {
-  const adtechImpact = clamp(obj.adtechImpact);
-  const aiImpact = clamp(obj.aiImpact);
-  const novelty = clamp(obj.novelty);
-  const urgency = clamp(obj.urgency);
-  const audienceRelevance = clamp(obj.audienceRelevance);
+  // Defensively clamp each axis 0-100 (clamp coerces non-numbers to the fallback).
+  const adtechImpact = clamp(obj.adtechImpact, 60);
+  const aiImpact = clamp(obj.aiImpact, 60);
+  const novelty = clamp(obj.novelty, 60);
+  const urgency = clamp(obj.urgency, 60);
+  const audienceRelevance = clamp(obj.audienceRelevance, 60);
   const confidence = clamp(obj.confidence, confidenceFloor);
-  const base =
-    0.28 * adtechImpact + 0.22 * aiImpact + 0.16 * novelty + 0.16 * urgency + 0.18 * audienceRelevance;
-  const derived = Math.round(base * (confidence / 100));
-  const composite = clamp(obj.composite, derived);
+  // IGNORE the model's `composite` (it returns garbage, e.g. 9). Recompute in code as
+  // a sane weighted average of the six axes (weights sum to 1), then let confidence
+  // NUDGE — not gut — the result (0.7..1.0 multiplier), clamped + rounded 0-100.
+  const weightedAvg =
+    0.25 * adtechImpact +
+    0.2 * aiImpact +
+    0.2 * audienceRelevance +
+    0.15 * urgency +
+    0.1 * novelty +
+    0.1 * confidence;
+  const composite = clamp(weightedAvg * (0.7 + 0.3 * (confidence / 100)), 60);
   return { adtechImpact, aiImpact, novelty, urgency, audienceRelevance, confidence, composite };
 }
 
