@@ -33,27 +33,147 @@ function buildPrompt(title: string, summary: string, brief?: string): string {
     "Ground every label in these facts (use them, do not invent companies or numbers):",
     ctx || title,
     "",
-    "STYLE: clean modern grid, generous whitespace, a restrained palette with a deep indigo accent on a soft near-white background, crisp sans-serif typography, subtle hairline dividers.",
+    "STYLE: clean modern grid with generous whitespace and crisp sans-serif typography, but VIVID and colorful — give each of the three sections its own bold, saturated accent color with bright modern icons and energetic highlights. The colors must pop; never flat, washed out, or monochrome.",
     "Every word must be real, correctly spelled English, legible, and meaningful. No gibberish, no lorem ipsum, no random letters.",
     "No real brand logos, no photographs of real people, no watermarks, no signatures.",
   ].join("\n");
 }
 
-// Digest: ONE infographic that combines the top 3 stories of the day, one panel each.
-function buildDigestPrompt(title: string, storiesText: string): string {
+// Digest = a premium executive strategic MARKET MAP (Bloomberg / Sequoia aesthetic).
+// Fully GENERIC: the players, roles, key ideas, relationships, score, and benefits/at-risk
+// are all data-driven via `spec`, so the same template adapts to ANY day's signals (any
+// companies, categories, or counts) — the example brief is just one instance of this template.
+type BlueprintSpec = {
+  headline: string;
+  subtitle: string;
+  pulseScore: number;
+  importance: string; // HIGH | MEDIUM | MODERATE
+  layers: { label: string; subject: string }[]; // fallback tiers when players are absent
+  players: { entity: string; role: string; keyIdea: string }[]; // power-map players (data-driven)
+  relationships: { from: string; to: string; relation: string }[]; // directional influence arrows
+  marketContext: string; // grounded source for WHO BENEFITS / AT RISK (condensed by the model)
+  actionContext: string; // grounded source for NOW / NEXT / WATCH (condensed by the model)
+};
+
+function buildDigestPrompt(spec: BlueprintSpec): string {
+  // Generic: players, roles, key ideas, relationships, score and the benefits/at-risk
+  // lists are all data-driven, so this Bloomberg-style market map adapts to ANY day's signals.
+  const players = spec.players.length
+    ? spec.players
+    : spec.layers.map((l) => ({ entity: l.subject, role: l.label, keyIdea: l.subject }));
+
+  const positions = ["LEFT", "TOP RIGHT", "BOTTOM LEFT", "BOTTOM RIGHT", "CENTER"];
+  const playerLines = players.map((p, i) => {
+    const pos = positions[i] ?? `REGION ${i + 1}`;
+    return `- ${pos}: "${p.entity}" — Role: ${p.role}. Key idea: ${p.keyIdea}`;
+  });
+  const relLines = spec.relationships.length
+    ? spec.relationships.map((r) => `- ${r.from} -> ${r.to}: ${r.relation}`)
+    : ["- Draw only the few most important directional arrows implied by the players above."];
+
   return [
-    "Design a polished, magazine-quality editorial INFOGRAPHIC, 16:9 landscape: a DAILY DIGEST of the top stories in advertising and AI today.",
+    "Create a premium executive strategic MARKET MAP for Ad AI Pulse. It is NOT an infographic, NOT a dashboard, NOT a social-media graphic. It must feel like a Bloomberg intelligence slide or a Sequoia market map.",
+    "GOAL: help a senior advertising executive instantly understand how AI is reshaping the advertising industry, in under 10 seconds. Prioritize clarity, hierarchy, and strategic understanding over decoration. Minimal text, maximum comprehension.",
     "",
-    `HEADLINE (render this exact text, large across the top): ${title}`,
+    "STYLE:",
+    "- 16:9 landscape.",
+    "- Dark, premium background (deep charcoal or near-black navy).",
+    "- Minimal, clean, highly legible. Modern strategic visualization with sharp, confident typography.",
+    "- High-end consulting / Bloomberg-terminal aesthetic. SUBTLE neon accents ONLY (a little electric cyan and soft gold), used sparingly for emphasis. Do NOT overload with UI elements or clutter.",
     "",
-    "Show the 3 stories below as connected nodes with simple arrows or connectors that convey the DYNAMICS between them (who pressures whom, what shifts because of what, the shared impact). It must read like a clear map of today's moves, not three isolated boxes. For each story: a simple flat icon, a short bold label (3 to 6 words: who did what), and a one-line impact (5 to 9 words).",
+    "TITLE (top-left, large and bold): AI ADVERTISING POWER MAP",
+    `Subtitle (under the title, smaller): ${spec.subtitle}`,
+    `Top-right badge (one clean line): AAP Pulse Score: ${spec.pulseScore} / 100`,
     "",
-    "THE THREE STORIES (use these exactly, do not invent companies or numbers):",
-    storiesText,
+    "MAIN VISUAL: a strategic TERRITORY MAP of the dominant players below, each controlling a different layer of the advertising stack. DO NOT use equal-sized quadrants — create clear HIERARCHY and RELATIONSHIPS, using size and position to convey dominance. Give each player a small, distinct visual motif fitting its role (for example a search and answer ecosystem, an audience graph, bidding pipelines, or a retail and commerce grid). Place the players at these regions:",
+    ...playerLines,
     "",
-    "STYLE: clean modern editorial diagram, generous whitespace, a restrained palette with a deep indigo accent on a soft near-white background, crisp sans-serif typography, thin connector lines and arrows to show the relationships.",
-    "Every word must be real, correctly spelled English, legible, and meaningful. No gibberish, no lorem ipsum, no real brand logos, no photographs of people, no watermarks.",
+    "RELATIONSHIPS: draw ONLY these few major directional arrows (subtle, thin, never busy), showing how influence flows between the players:",
+    ...relLines,
+    "",
+    "BOTTOM BAR — three concise blocks. Derive ONE short line for each from the ACTION CONTEXT (condense; do not render the context verbatim):",
+    '- "NOW": the immediate audit or move.',
+    '- "NEXT": the 30 to 90 day investment.',
+    '- "WATCH": the open strategic question to monitor.',
+    "ACTION CONTEXT: " +
+      (spec.actionContext ||
+        "Audit AI readiness across discovery, targeting, and DSP infrastructure; invest in structured data, AI workflows, and first-party data; watch which platform becomes the operating system for AI-native advertising."),
+    "",
+    "Two small, clean lists in the lower corners (4 crisp 2-to-4-word items each, derived from the MARKET CONTEXT, never invented):",
+    '- "WHO BENEFITS": the platforms, infrastructure, and data advantages that gain.',
+    '- "AT RISK": the tactics, players, and models that are exposed.',
+    "MARKET CONTEXT: " + spec.marketContext,
+    "",
+    "A senior advertising executive should understand the market shift in under 10 seconds. Every rendered word must be real, correctly spelled English, legible, and meaningful. No gibberish, no lorem ipsum. Render company NAMES as clean text labels only — no real brand logos, no photographs of people, no watermarks, no signatures.",
   ].join("\n");
+}
+
+// Build a BlueprintSpec from the request body, with safe fallbacks so the route still
+// produces a coherent power map even when only title/summary are provided.
+function specFromBody(body: Json, title: string, summary: string): BlueprintSpec {
+  const bp = (body.blueprint ?? {}) as Json;
+
+  const rawLayers = Array.isArray(bp.layers) ? (bp.layers as Json[]) : [];
+  const layers = rawLayers
+    .map((l) => {
+      const o = (l ?? {}) as Json;
+      return {
+        label: typeof o.label === "string" ? o.label : "",
+        subject: typeof o.subject === "string" ? o.subject : "",
+      };
+    })
+    .filter((l) => l.label && l.subject);
+
+  const rawPlayers = Array.isArray(bp.players) ? (bp.players as Json[]) : [];
+  const players = rawPlayers
+    .map((p) => {
+      const o = (p ?? {}) as Json;
+      return {
+        entity: typeof o.entity === "string" ? o.entity : "",
+        role: typeof o.role === "string" ? o.role : "",
+        keyIdea: typeof o.keyIdea === "string" ? o.keyIdea : "",
+      };
+    })
+    .filter((p) => p.entity)
+    .slice(0, 5);
+
+  const rawRels = Array.isArray(bp.relationships) ? (bp.relationships as Json[]) : [];
+  const relationships = rawRels
+    .map((r) => {
+      const o = (r ?? {}) as Json;
+      return {
+        from: typeof o.from === "string" ? o.from : "",
+        to: typeof o.to === "string" ? o.to : "",
+        relation: typeof o.relation === "string" ? o.relation : "",
+      };
+    })
+    .filter((r) => r.from && r.to)
+    .slice(0, 6);
+
+  // Fallback: derive tiers from a numbered summary list ("1. ...\n2. ...").
+  const fallbackLayers = summary
+    .split("\n")
+    .map((s) => s.replace(/^\s*\d+[.)]\s*/, "").trim())
+    .filter(Boolean)
+    .map((subject, i) => ({ label: `LAYER ${i + 1}`, subject }));
+
+  const finalLayers = (layers.length ? layers : fallbackLayers).slice(0, 5);
+
+  return {
+    headline:
+      typeof bp.headline === "string" && bp.headline ? bp.headline : title || "Today in AdTech and AI",
+    subtitle:
+      typeof bp.subtitle === "string" && bp.subtitle
+        ? bp.subtitle
+        : "How AI is reshaping discovery, audience targeting, execution, and commerce.",
+    pulseScore: typeof bp.pulseScore === "number" ? Math.round(bp.pulseScore) : 90,
+    importance: typeof bp.importance === "string" && bp.importance ? bp.importance : "HIGH",
+    layers: finalLayers.length ? finalLayers : [{ label: "SIGNAL LAYER", subject: title }],
+    players,
+    relationships,
+    marketContext: typeof bp.marketContext === "string" && bp.marketContext ? bp.marketContext : summary || title,
+    actionContext: typeof bp.actionContext === "string" ? bp.actionContext : "",
+  };
 }
 
 function extractImage(data: Json): { b64: string; mime: string } | null {
@@ -114,7 +234,10 @@ export async function POST(req: NextRequest) {
   }
 
   const kind = body.kind === "digest" ? "digest" : "signal";
-  const prompt = kind === "digest" ? buildDigestPrompt(title, summary) : buildPrompt(title, summary, brief);
+  const prompt =
+    kind === "digest"
+      ? buildDigestPrompt(specFromBody(body, title, summary))
+      : buildPrompt(title, summary, brief);
 
   // 1) Nano Banana Pro. 2) flash fallback. Either may be swallowed; the client shows a
   //    tasteful placeholder rather than an error.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Sparkles } from "lucide-react";
 import { CURATED_SIGNALS } from "@/lib/data";
 import { TODAY } from "@/lib/daily";
@@ -25,8 +25,10 @@ import InfographicCard from "./InfographicCard";
 import DailyDigest from "./DailyDigest";
 import VoiceBrief from "./VoiceBrief";
 import ModeSwitcher, { type BriefMode } from "./ModeSwitcher";
-import PersonaSelector, { type Persona } from "./PersonaSelector";
+import DailyLensRail from "./DailyLensRail";
+import CrossSignalSynthesis from "./CrossSignalSynthesis";
 import ReadFocus from "./ReadFocus";
+import { buildAllDailyViews } from "@/lib/dailyBrief";
 
 // Active lens-filter chip colors (functional category color; static for Tailwind).
 const LENS_CHIP: Record<LensId, string> = {
@@ -59,10 +61,11 @@ export default function PulseConsole() {
   const stream = usePulseStream(CURATED_SIGNALS[0]);
   const [mode, setMode] = useState<EngineMode>("cached");
   const [briefMode, setBriefMode] = useState<BriefMode>("visual");
-  const [persona, setPersona] = useState<Persona>("all");
+  const [lens, setLens] = useState<LensId>("strategist");
   const [selectedId, setSelectedId] = useState<string>(CURATED_SIGNALS[0].id);
   const [activeLens, setActiveLens] = useState<"all" | LensId>("all");
   const [customSignals, setCustomSignals] = useState<SignalAnalysis[]>([]);
+  const dailyViews = useMemo(() => buildAllDailyViews(), []);
   const pendingCustomRef = useRef(false);
   const modeRef = useRef<HTMLElement | null>(null);
 
@@ -96,10 +99,10 @@ export default function PulseConsole() {
     );
   };
 
-  // Picking a persona re-ranks the focus panel and defaults the lens cards to that role.
-  const onPersona = (p: Persona) => {
-    setPersona(p);
-    setActiveLens(p);
+  // Picking a lens re-frames the through-line, re-ranks Read, and defaults the lens cards.
+  const onLens = (id: LensId) => {
+    setLens(id);
+    setActiveLens(id);
   };
 
   const onPlayground = (text: string) => {
@@ -134,10 +137,11 @@ export default function PulseConsole() {
         <DailyPulse brief={TODAY} selectedId={selectedId} onDeepDive={onDeepDive} />
       </div>
 
-      {/* Personalize: who you are, then how you want it */}
+      {/* Personalize: pick your lens, read the through-line, choose your format */}
       <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-6 flex flex-col gap-3">
-        <p className="text-sm text-ink-muted">Same intelligence. Your role, your format.</p>
-        <PersonaSelector persona={persona} onPersona={onPersona} />
+        <p className="text-sm text-ink-muted">Same day, four readings. Pick your lens, then your format.</p>
+        <DailyLensRail views={dailyViews} active={lens} onChange={onLens} />
+        <CrossSignalSynthesis view={dailyViews[lens]} />
         <ModeSwitcher mode={briefMode} onMode={setBriefMode} />
       </div>
 
@@ -151,7 +155,7 @@ export default function PulseConsole() {
         )}
 
         {/* VOICE — Rachel reads today's top stories */}
-        {briefMode === "voice" && <VoiceBrief brief={TODAY} />}
+        {briefMode === "voice" && <VoiceBrief brief={TODAY} view={dailyViews[lens]} />}
 
         {/* VIDEO — short Rachel video brief (optional / nice-to-have) */}
         {briefMode === "video" && (
@@ -169,7 +173,7 @@ export default function PulseConsole() {
           <div className="flex flex-col gap-6">
             <ReadFocus
               brief={TODAY}
-              persona={persona}
+              persona={lens}
               selectedId={selectedId}
               onSelect={onSelect}
             />
@@ -297,10 +301,7 @@ export default function PulseConsole() {
         )}
 
         {/* Ada is available in every mode (project-aware + persona-aware follow-up) */}
-        <AskAda
-          analysis={analysis}
-          roleHint={persona === "all" ? "" : LENS_BY_ID[persona].role}
-        />
+        <AskAda analysis={analysis} roleHint={LENS_BY_ID[lens].role} />
       </main>
 
       <footer className="border-t border-border bg-surface">

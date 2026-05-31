@@ -7,15 +7,18 @@ type Props = {
   title: string;
   summary: string;
   brief?: string;
-  // "signal" = single-story infographic; "digest" = combined "3 moves + dynamics" map.
+  // "signal" = single-story infographic; "digest" = combined blueprint executive brief.
   kind?: "signal" | "digest";
+  // Structured spec for the digest blueprint (layers, score, winners/risks, actions).
+  // Memoize at the call site so the fetch effect runs once.
+  blueprint?: unknown;
 };
 
 // Module-level cache keyed by title: lazily generate each infographic at most once
 // per session, so re-mounting (tab switches, list re-renders) reuses the result.
 const cache = new Map<string, string | null>();
 
-export default function InfographicCard({ title, summary, brief, kind = "signal" }: Props) {
+export default function InfographicCard({ title, summary, brief, kind = "signal", blueprint }: Props) {
   const cacheKey = `${kind}|${title}`;
   const [dataUrl, setDataUrl] = useState<string | null>(() => cache.get(cacheKey) ?? null);
   const [loading, setLoading] = useState(() => !cache.has(cacheKey));
@@ -39,7 +42,7 @@ export default function InfographicCard({ title, summary, brief, kind = "signal"
         const res = await fetch("/api/infographic", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, summary, brief, kind }),
+          body: JSON.stringify({ title, summary, brief, kind, blueprint }),
         });
         const json = (await res.json()) as { dataUrl?: string | null };
         const url = typeof json.dataUrl === "string" ? json.dataUrl : null;
@@ -56,7 +59,7 @@ export default function InfographicCard({ title, summary, brief, kind = "signal"
     return () => {
       alive = false;
     };
-  }, [cacheKey, title, summary, brief, kind]);
+  }, [cacheKey, title, summary, brief, kind, blueprint]);
 
   return (
     <figure className="enter rounded-lg border border-border bg-surface overflow-hidden shadow-e1">

@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { ArrowRight, Sparkles, Square, TrendingUp } from "lucide-react";
 import type { DailyBrief, SignalAnalysis } from "@/lib/types";
 import { LENS_BY_ID } from "@/lib/lenses";
+import { DAILY_MOVERS, buildDailyView } from "@/lib/dailyBrief";
 import InfographicCard from "./InfographicCard";
 
 // ─── Prop interface ────────────────────────────────────────────────────────────
@@ -79,9 +81,114 @@ function scoreChipClass(score: number): string {
   return "bg-surface-2 text-ink-faint border border-border";
 }
 
+// ─── Blueprint spec: data-driven + generalized for ANY day's signals ────────────
+// Each signal's category maps to a stack tier (Discovery / Trust / Execution, with a
+// graceful fallback). The winners / at-risk / now-next-watch are NOT hardcoded: they are
+// grounded context drawn from each signal's real GTM lens + action data, which the image
+// model condenses. So the blueprint adapts to any companies, categories, or counts.
+function layerFor(category: string): { rank: number; label: string; word: string } {
+  const c = category.toLowerCase();
+  if (/search|discover|commerce|overview|answer|attention|audience|consumer/.test(c))
+    return { rank: 0, label: "DISCOVERY LAYER", word: "Discovery" };
+  if (/policy|trust|complian|watermark|regulat|synthetic|safety|provenance|privacy|brand/.test(c))
+    return { rank: 1, label: "TRUST LAYER", word: "Trust" };
+  if (/dsp|infrastructure|bidding|execution|programmatic|inference|exchange|supply|measure|identity|stack/.test(c))
+    return { rank: 2, label: "EXECUTION LAYER", word: "Execution" };
+  const head = category.split(/[\s&/]+/)[0] || "Signal";
+  return { rank: 3, label: `${head.toUpperCase()} LAYER`, word: head };
+}
+
+function gtmCardOf(s: SignalAnalysis) {
+  return s.cards.find((c) => c.lens === "gtm");
+}
+
+// Power-map derivations: clean entity name, strategic role, and a one-line key idea.
+const COMPANY_BY_ID: Record<string, string> = Object.fromEntries(
+  DAILY_MOVERS.map((m) => [m.signalId, m.company]),
+);
+
+function companyFor(s: SignalAnalysis): string {
+  return COMPANY_BY_ID[s.id] ?? s.title.split(/\s+/).slice(0, 2).join(" ");
+}
+
+function roleFor(category: string): string {
+  const c = category.toLowerCase();
+  if (/audience|targeting|social|prediction|behavior/.test(c)) return "Audience Engine";
+  if (/policy|trust|complian|watermark|regulat|synthetic|safety|provenance|privacy/.test(c))
+    return "Trust & Compliance Engine";
+  if (/dsp|infrastructure|bidding|execution|programmatic|inference|exchange|supply/.test(c))
+    return "Execution Engine";
+  if (/retail|shopping|amazon|conversion/.test(c)) return "Commerce Engine";
+  if (/search|discover|overview|answer|commerce/.test(c)) return "Discovery Engine";
+  return "AI Engine";
+}
+
+function keyIdeaFor(s: SignalAnalysis): string {
+  const text = s.masterBrief?.whyItMatters ?? s.summary;
+  const first = (text.match(/[^.!?]+[.!?]?/) ?? [text])[0].trim();
+  const words = first.split(/\s+/);
+  return (words.length <= 14 ? first : words.slice(0, 14).join(" ")).replace(/[.,;:]+$/, "");
+}
+
+function buildBlueprintSpec(brief: DailyBrief) {
+  const layered = brief.signals
+    .slice(0, 5)
+    .map((s) => ({ ...layerFor(s.category), s }))
+    .sort((a, b) => a.rank - b.rank);
+
+  const layers = layered.map((l) => ({ label: l.label, subject: l.s.title }));
+
+  const words = Array.from(new Set(layered.map((l) => l.word)));
+  const subtitle =
+    words.length >= 2
+      ? `${words.slice(0, -1).join(", ")}, and ${words[words.length - 1]} are becoming AI-native.`
+      : `${words[0] ?? "The ad stack"} is becoming AI-native.`;
+
+  const top = Math.max(0, ...brief.signals.map((s) => s.pulseScore?.composite ?? s.hypeCheckScore));
+  const pulseScore = Math.round(top);
+  const importance = pulseScore >= 85 ? "HIGH" : pulseScore >= 70 ? "MEDIUM" : "MODERATE";
+
+  const marketContext = layered
+    .map((l) => {
+      const g = gtmCardOf(l.s);
+      const bullets = g ? g.bullets.map((b) => b.replace(/\*\*/g, "")).join(" ") : "";
+      return `- ${l.s.category}: ${g?.brief ?? l.s.summary} ${bullets}`.trim();
+    })
+    .join("\n");
+
+  const actionContext = layered
+    .map((l) => {
+      const now = l.s.actionHorizon?.now?.[0] ?? gtmCardOf(l.s)?.actionSteps?.[0] ?? "";
+      const next = l.s.actionHorizon?.next?.[0] ?? "";
+      const watch = l.s.masterBrief?.whatToWatch?.[0] ?? "";
+      return `- ${l.s.category}: NOW ${now} | NEXT ${next} | WATCH ${watch}`;
+    })
+    .join("\n");
+
+  const players = brief.signals.slice(0, 4).map((s) => ({
+    entity: companyFor(s),
+    role: roleFor(s.category),
+    keyIdea: keyIdeaFor(s),
+  }));
+  const relationships = buildDailyView("executive").edges;
+
+  return {
+    headline: brief.headline,
+    subtitle,
+    pulseScore,
+    importance,
+    layers,
+    players,
+    relationships,
+    marketContext,
+    actionContext,
+  };
+}
+
 // ─── Component ─────────────────────────────────────────────────────────────────
 export default function DailyDigest({ brief, onDeepDive }: DailyDigestProps) {
   const signals = brief.signals.slice(0, 3);
+  const blueprint = useMemo(() => buildBlueprintSpec(brief), [brief]);
 
   // Build the numbered list for the infographic image prompt.
   const infographicSummary = signals
@@ -117,8 +224,9 @@ export default function DailyDigest({ brief, onDeepDive }: DailyDigestProps) {
         <div className="mt-5">
           <InfographicCard
             kind="digest"
-            title="Today in AdTech and AI"
+            title="AI Advertising Power Map"
             summary={infographicSummary}
+            blueprint={blueprint}
           />
         </div>
 

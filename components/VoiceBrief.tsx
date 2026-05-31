@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Play, Square, Mic } from "lucide-react";
+import { Play, Square, Mic, Copy, Check } from "lucide-react";
 import type { DailyBrief, SignalAnalysis } from "@/lib/types";
+import type { DailyView } from "@/lib/dailyBrief";
 
 // ── Script helpers ──────────────────────────────────────────────────────────
 
@@ -67,18 +68,50 @@ function buildScript(signals: SignalAnalysis[]): string {
   return [intro, ...bodies, signoff].join(" ");
 }
 
+// Build a spoken script from a DailyView (lens-aware).
+function buildViewScript(view: DailyView): string {
+  const intro = clean(
+    `Here is your Ad AI Pulse briefing, read for the ${view.lensLabel}.`,
+  );
+  const through = clean(view.through);
+  const moverLines = view.movers.map((m) => {
+    const company = clean(m.company);
+    const move = clean(m.move);
+    const impact = clean(m.impact);
+    return impact
+      ? `${company}, ${move}. ${impact}.`
+      : `${company}, ${move}.`;
+  });
+  const signoff =
+    "That is your pulse for today. Stay sharp, and I will see you tomorrow.";
+  return [intro, through, ...moverLines, signoff].join(" ");
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export interface VoiceBriefProps {
   brief: DailyBrief;
+  view?: DailyView;
 }
 
-export default function VoiceBrief({ brief }: VoiceBriefProps) {
-  const script = useMemo(() => buildScript(brief.signals), [brief.signals]);
+export default function VoiceBrief({ brief, view }: VoiceBriefProps) {
+  // Derive the canonical script from either the view or the brief signals.
+  const canonicalScript = useMemo(
+    () => (view ? buildViewScript(view) : buildScript(brief.signals)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [view, brief.signals],
+  );
+
+  // Editable script state — reset whenever the canonical source changes.
+  const [editedScript, setEditedScript] = useState(canonicalScript);
+  useEffect(() => {
+    setEditedScript(canonicalScript);
+  }, [canonicalScript]);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [via, setVia] = useState<"server" | "browser" | null>(null);
+  const [copied, setCopied] = useState(false);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -99,9 +132,9 @@ export default function VoiceBrief({ brief }: VoiceBriefProps) {
 
   const playBrowser = () => {
     const synth = synthRef.current;
-    if (!synth || !script) return;
+    if (!synth || !editedScript) return;
     synth.cancel();
-    const u = new SpeechSynthesisUtterance(script);
+    const u = new SpeechSynthesisUtterance(editedScript);
     const voices = synth.getVoices();
     const pick = voices.find(
       (v) =>
@@ -130,7 +163,7 @@ export default function VoiceBrief({ brief }: VoiceBriefProps) {
       const res = await fetch("/api/speech", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: script }),
+        body: JSON.stringify({ text: editedScript }),
       });
       if (res.ok) {
         const data = (await res.json()) as { audio?: string; mime?: string };
@@ -158,8 +191,19 @@ export default function VoiceBrief({ brief }: VoiceBriefProps) {
     playBrowser();
   };
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(editedScript);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable in some sandboxed environments */
+    }
+  };
+
   return (
     <div className="rounded-lg border border-border bg-surface p-5 shadow-e1">
+      {/* ── Header row: Rachel avatar + play controls ── */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="flex items-start gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 text-lg font-semibold text-ink">
@@ -173,9 +217,16 @@ export default function VoiceBrief({ brief }: VoiceBriefProps) {
               <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-2xs font-medium text-ink-faint">
                 Voice brief
               </span>
+              {view && (
+                <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-2xs font-medium text-ink-faint">
+                  {view.lensLabel}
+                </span>
+              )}
             </div>
             <p className="mt-1 max-w-md text-sm text-ink-muted">
-              The day&rsquo;s top three stories, read aloud.
+              {view
+                ? `The day's top moves, read for the ${view.lensLabel}.`
+                : "The day’s top three stories, read aloud."}
             </p>
           </div>
         </div>
@@ -226,18 +277,114 @@ export default function VoiceBrief({ brief }: VoiceBriefProps) {
         </div>
       </div>
 
-      <div className="thin-scroll mt-4 max-h-40 overflow-y-auto rounded-md border border-border bg-surface-2 p-3.5">
-        <div className="mb-1.5 flex w-fit items-center gap-1.5 text-2xs text-ink-faint">
-          <Mic className="h-3 w-3 text-ink-faint" aria-hidden="true" />
-          <span>
-            {via
-              ? `AI-generated voice via ${via}, disclosed.`
-              : "AI-generated voice, disclosed."}
-          </span>
+      {/* ── Main body: 2-col on lg (script | chapters), stacked on mobile ── */}
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Script panel — col-span-2 on lg */}
+        <div className="lg:col-span-2 flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <label
+              htmlFor="voice-brief-script"
+              className="flex items-center gap-1.5 text-2xs text-ink-faint"
+            >
+              <Mic className="h-3 w-3 text-ink-faint" aria-hidden="true" />
+              <span>
+                {via
+                  ? `AI-generated voice via ${via}, disclosed.`
+                  : "AI-generated voice, disclosed."}
+              </span>
+            </label>
+            <button
+              type="button"
+              onClick={handleCopy}
+              aria-label="Copy script to clipboard"
+              className="flex items-center gap-1.5 rounded-md border border-border bg-surface-2 px-2.5 py-1 text-2xs font-medium text-ink-muted transition-colors hover:bg-surface hover:text-ink"
+            >
+              {copied ? (
+                <Check className="h-3 w-3 text-success" aria-hidden="true" />
+              ) : (
+                <Copy className="h-3 w-3" aria-hidden="true" />
+              )}
+              <span>{copied ? "Copied" : "Copy script"}</span>
+            </button>
+            {/* aria-live region announces the copy confirmation to screen readers */}
+            <span
+              aria-live="polite"
+              aria-atomic="true"
+              className="sr-only"
+            >
+              {copied ? "Copied" : ""}
+            </span>
+          </div>
+
+          <textarea
+            id="voice-brief-script"
+            value={editedScript}
+            onChange={(e) => setEditedScript(e.target.value)}
+            rows={6}
+            spellCheck={false}
+            className="thin-scroll w-full resize-y rounded-md border border-border bg-surface-2 p-3.5 text-sm italic leading-relaxed text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-label="Editable voice brief script"
+          />
         </div>
-        <p className="text-sm leading-relaxed text-ink-muted">
-          &ldquo;{script}&rdquo;
-        </p>
+
+        {/* Chapters panel — inline on lg, collapsible on mobile */}
+        {view && (
+          <>
+            {/* Desktop: always-visible aside */}
+            <div className="hidden lg:flex lg:flex-col lg:gap-2">
+              <p className="text-2xs font-medium text-ink-faint uppercase tracking-wide">
+                In this briefing
+              </p>
+              <dl className="flex flex-col gap-3">
+                {view.movers.map((m) => (
+                  <div key={m.signalId}>
+                    <dt className="text-xs font-semibold text-ink">
+                      {m.company}{" "}
+                      <span className="font-normal text-ink-muted">
+                        &middot; {m.move}
+                      </span>
+                    </dt>
+                    {m.impact && (
+                      <dd className="mt-0.5 text-xs text-ink-muted leading-snug">
+                        {m.impact}
+                      </dd>
+                    )}
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* Mobile: collapsible details */}
+            <details className="lg:hidden rounded-md border border-border bg-surface-2">
+              <summary className="cursor-pointer list-none px-3.5 py-2.5 text-xs font-medium text-ink-muted select-none [&::-webkit-details-marker]:hidden">
+                In this briefing
+                <span className="ml-1 text-ink-faint" aria-hidden="true">
+                  &#x25BE;
+                </span>
+              </summary>
+              <dl className="flex flex-col gap-3 px-3.5 pb-3.5 pt-2 border-t border-border">
+                {view.movers.map((m) => (
+                  <div key={m.signalId}>
+                    <dt className="text-xs font-semibold text-ink">
+                      {m.company}{" "}
+                      <span className="font-normal text-ink-muted">
+                        &middot; {m.move}
+                      </span>
+                    </dt>
+                    {m.impact && (
+                      <dd className="mt-0.5 text-xs text-ink-muted leading-snug">
+                        {m.impact}
+                      </dd>
+                    )}
+                  </div>
+                ))}
+              </dl>
+            </details>
+          </>
+        )}
+
+        {/* No-view fallback: full-width script read-only display (matches original layout) */}
+        {!view && null}
       </div>
     </div>
   );

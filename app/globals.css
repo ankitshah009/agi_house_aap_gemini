@@ -31,22 +31,22 @@
   --text-2xl--line-height: 2.05rem;
   --text-3xl--line-height: 2.4rem;
 
-  /* ---- Neutrals (warm paper-white canvas; ink, not pure black) ---- */
-  --color-bg: oklch(99% 0.004 95);          /* page */
-  --color-surface: oklch(100% 0 0);         /* cards */
-  --color-surface-2: oklch(97.4% 0.004 95); /* inset/secondary fills */
+  /* ---- Neutrals (cool-tinted canvas; ink, not pure black) ---- */
+  --color-bg: oklch(99% 0.004 272);          /* page — faint cool tint, premium */
+  --color-surface: oklch(100% 0 0);          /* cards */
+  --color-surface-2: oklch(97.4% 0.005 272); /* inset/secondary fills — cool tint */
   --color-ink: oklch(24% 0.015 270);        /* primary text ~ 13.5:1 on surface */
   --color-ink-muted: oklch(45% 0.014 270);  /* secondary text ~ 5.6:1 on surface */
   --color-ink-faint: oklch(56% 0.012 270);  /* tertiary/meta ~ 3.9:1 -> non-text + large only, NEVER body */
   --color-border: oklch(92% 0.005 270);     /* hairline */
   --color-border-strong: oklch(85% 0.008 270);
 
-  /* ---- Accent: indigo. Action / selection / state ONLY. ---- */
-  --color-accent: oklch(54% 0.19 268);          /* buttons, focus ring, selected */
-  --color-accent-hover: oklch(49% 0.2 268);
-  --color-accent-ink: oklch(99% 0.01 268);      /* text/icon on accent fill */
-  --color-accent-soft: oklch(96% 0.03 268);     /* faint indigo tint (selected row bg) */
-  --color-accent-quiet: oklch(45% 0.16 268);    /* indigo text on light, body-contrast safe ~6.2:1 */
+  /* ---- Accent: electric blue-violet — "intelligence terminal". High-chroma, premium, vivid. ---- */
+  --color-accent: oklch(54% 0.24 272);          /* buttons, focus ring, selected */
+  --color-accent-hover: oklch(48% 0.25 272);
+  --color-accent-ink: oklch(99% 0.01 272);      /* text/icon on accent fill */
+  --color-accent-soft: oklch(96% 0.04 272);     /* faint blue-violet tint (selected row bg) */
+  --color-accent-quiet: oklch(44% 0.18 272);    /* blue-violet text on light, body-contrast safe >=4.5:1 */
 
   /* ---- Status (semantic, not decorative) ---- */
   --color-success: oklch(52% 0.13 155);
@@ -96,10 +96,10 @@
   --color-ink-faint: oklch(62% 0.012 270);
   --color-border: oklch(33% 0.012 270);
   --color-border-strong: oklch(42% 0.014 270);
-  --color-accent: oklch(70% 0.15 268);
-  --color-accent-quiet: oklch(78% 0.13 268);
-  --color-accent-soft: oklch(30% 0.06 268);
-  --color-accent-ink: oklch(20% 0.02 268);
+  --color-accent: oklch(72% 0.20 272);
+  --color-accent-quiet: oklch(79% 0.16 272);
+  --color-accent-soft: oklch(30% 0.08 272);
+  --color-accent-ink: oklch(20% 0.02 272);
   --shadow-e1: 0 1px 2px oklch(0% 0 0 / 0.4);
   --shadow-e2: 0 1px 2px oklch(0% 0 0 / 0.4), 0 4px 12px oklch(0% 0 0 / 0.45);
 }
@@ -194,6 +194,31 @@
 @utility level-bar {
   transform-origin: bottom;
   animation: aap-level 0.9s var(--ease-standard) infinite;
+}
+@utility wave-bar-1 {
+  transform-origin: bottom;
+  animation: aap-level 0.9s var(--ease-standard) infinite;
+  animation-delay: 0s;
+}
+@utility wave-bar-2 {
+  transform-origin: bottom;
+  animation: aap-level 0.9s var(--ease-standard) infinite;
+  animation-delay: 0.15s;
+}
+@utility wave-bar-3 {
+  transform-origin: bottom;
+  animation: aap-level 0.9s var(--ease-standard) infinite;
+  animation-delay: 0.3s;
+}
+@utility wave-bar-4 {
+  transform-origin: bottom;
+  animation: aap-level 0.9s var(--ease-standard) infinite;
+  animation-delay: 0.45s;
+}
+@utility wave-bar-5 {
+  transform-origin: bottom;
+  animation: aap-level 0.9s var(--ease-standard) infinite;
+  animation-delay: 0.6s;
 }
 
 /* Thin neutral scrollbar. */
