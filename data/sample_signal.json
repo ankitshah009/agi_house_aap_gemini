@@ -1,0 +1,57 @@
+{
+  "signal": {
+    "title": "Google launches Gemini Ads Studio",
+    "source": "Google Blog",
+    "date": "2026-05-30",
+    "summary": "Google introduced an AI-powered creative and campaign platform designed to help advertisers generate, test, and optimize ads at scale.",
+    "confidence": "High"
+  },
+  "selectedLens": "agency_strategist",
+  "lensOutputs": {
+    "agency_strategist": {
+      "label": "Agency Strategist",
+      "decisionType": "Client POV",
+      "pulseScore": 92,
+      "whyItMatters": "Creative production costs are about to fall for mid-market brands. Agencies that package workflow transformation rather than asset production will win.",
+      "now": "Review creative production workflows with key clients.",
+      "next": "Build an AI content testing framework for Q3 campaigns.",
+      "later": "Develop AI creative governance and brand safety processes.",
+      "watchout": "Clients may overestimate output quality and underestimate review needs.",
+      "keyImplications": ["Workflow disruption", "Cost deflation", "Client expectations", "New revenue models"]
+    },
+    "executive_strategy": {
+      "label": "Executive Strategy",
+      "decisionType": "Investment Decision",
+      "pulseScore": 88,
+      "whyItMatters": "AI creative platforms may shift budget allocation from manual production toward workflow systems, governance, and experimentation infrastructure.",
+      "now": "Assess exposure across agency and brand production workflows.",
+      "next": "Review AI infrastructure and data strategy investments.",
+      "later": "Anticipate margin pressure on traditional production services.",
+      "watchout": "Enterprise adoption will depend on compliance, brand safety, and measurable ROI.",
+      "keyImplications": ["Budget shifts", "Org redesign", "Vendor consolidation", "AI governance"]
+    },
+    "adtech_gtm": {
+      "label": "AdTech & GTM",
+      "decisionType": "Product Opportunity",
+      "pulseScore": 85,
+      "whyItMatters": "New AI creative infrastructure creates opportunities for measurement, workflow orchestration, compliance, and platform integrations.",
+      "now": "Identify product gaps around creative QA and workflow handoff.",
+      "next": "Build sales narratives around platform disruption.",
+      "later": "Explore partnerships with AI creative and media platforms.",
+      "watchout": "Platform-native tools may compress standalone vendor differentiation.",
+      "keyImplications": ["Integration opportunity", "Competitive pressure", "Sales enablement", "Partner ecosystem"]
+    },
+    "responsible_ai_policy": {
+      "label": "Responsible AI & Policy",
+      "decisionType": "Trust Assessment",
+      "pulseScore": 78,
+      "whyItMatters": "AI-generated ad creative raises new questions around provenance, disclosure, rights, claims, and brand safety.",
+      "now": "Review disclosure and approval requirements for AI-generated assets.",
+      "next": "Define provenance standards for creative workflows.",
+      "later": "Monitor policy and regulatory guidance on AI-generated advertising.",
+      "watchout": "Undisclosed or unsupported claims could create legal and reputational risk.",
+      "keyImplications": ["Provenance", "Disclosure", "Claims verification", "Brand safety"]
+    }
+  },
+  "disclosure": "Produced by Ada · Reviewed by Rachel · Sources available"
+}

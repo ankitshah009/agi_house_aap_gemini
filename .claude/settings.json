@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm view *)",
+      "Bash(npm audit *)",
+      "Bash(npm ls *)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm view *)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_resize"
+    ]
+  }
+}

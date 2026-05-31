@@ -18,6 +18,8 @@ export const serverEnv = {
   fastModel: process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash",
   // TTS model for Rachel-voice briefings (best-effort; client Web Speech is the fallback).
   ttsModel: process.env.GEMINI_TTS_MODEL ?? "gemini-2.5-flash-preview-tts",
+  // Image model ("Nano Banana") for the Pulse infographic hero (best-effort; coded fallback).
+  imageModel: process.env.GEMINI_IMAGE_MODEL ?? "gemini-2.5-flash-image",
   // Antigravity (agent) timeout before falling back to cached.
   agentTimeoutMs: Number(process.env.PULSE_TIMEOUT_MS ?? 150_000),
   // Fast-path timeout.
