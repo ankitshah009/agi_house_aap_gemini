@@ -117,33 +117,57 @@ export default function PulseConsole() {
     <div className="min-h-screen flex flex-col bg-canvas">
       <BrandHeader />
 
-      {/* Quiet scope strip (no gradient, no ping) */}
-      <div className="border-b border-border bg-surface-2">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="h-2 w-2 rounded-full bg-accent status-live shrink-0" aria-hidden="true" />
-            <span className="text-sm text-ink truncate">Today in AdTech and AI</span>
-            <span className="hidden sm:inline text-xs text-ink-faint">· one source, four ways</span>
+      {/* Premium masthead — the brand thesis: One signal. Four decisions. */}
+      <div className="border-b border-border bg-surface-2/30">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12 flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="inline-flex items-center gap-2 text-2xs font-mono uppercase tracking-[0.22em] text-ink-faint">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent status-live" aria-hidden="true" />
+              AAP Lens Engine
+            </span>
+            <ThemeToggle />
           </div>
-          <ThemeToggle />
+          <h2 className="text-gradient text-3xl md:text-5xl font-extrabold leading-[1.03] tracking-tight">
+            One signal. Four decisions.
+          </h2>
+          <p className="max-w-[54ch] text-base md:text-lg leading-relaxed text-ink-muted">
+            AI-native intelligence for the AdTech and AI economy. Today&apos;s top signals, refracted through four
+            professional lenses.
+          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
+            {LENSES.map((l) => (
+              <span key={l.id} className="inline-flex items-center gap-1.5 text-2xs text-ink-faint">
+                <span className={`h-2 w-2 rounded-full ${l.dotClass}`} aria-hidden="true" />
+                {l.role}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Hero: the day's top signals (the one source) */}
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-6">
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-10">
         <DailyPulse brief={TODAY} selectedId={selectedId} onDeepDive={onDeepDive} />
       </div>
 
-      {/* Personalize: who you are, then how you want it */}
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-6 flex flex-col gap-3">
-        <p className="text-sm text-ink-muted">Same intelligence. Your role, your format.</p>
-        <PersonaSelector persona={persona} onPersona={onPersona} />
-        <ModeSwitcher mode={briefMode} onMode={setBriefMode} />
+      {/* Personalize: pick your lens, then your format — one unified control bar */}
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-8">
+        <div className="rounded-xl border border-border bg-surface/40 p-4 md:p-5 flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <span className="text-2xs font-mono uppercase tracking-wider text-ink-faint">Your lens</span>
+            <PersonaSelector persona={persona} onPersona={onPersona} />
+          </div>
+          <div className="h-px bg-border" aria-hidden="true" />
+          <div className="flex flex-col gap-2">
+            <span className="text-2xs font-mono uppercase tracking-wider text-ink-faint">Your format</span>
+            <ModeSwitcher mode={briefMode} onMode={setBriefMode} />
+          </div>
+        </div>
       </div>
 
       <main
         ref={modeRef}
-        className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 flex flex-col gap-6"
+        className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-8 flex flex-col gap-8"
       >
         {/* VISUAL — combined "today's 3 moves + dynamics" digest, ~60s */}
         {briefMode === "visual" && (
