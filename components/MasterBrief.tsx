@@ -82,10 +82,10 @@ function VerificationBadge({ confidence }: { confidence: Confidence }) {
         // The whole cluster is the trust instrument; the trailing button is the only
         // interactive affordance (provenance disclosure).
       >
-        {/* Persona micro-label — the single, quiet Aubric reference. */}
+        {/* Persona micro-label — the verification trust mark. */}
         <span className="flex items-center gap-1.5 px-3 py-2 text-xs text-ink-muted">
           <ShieldCheck className="h-3.5 w-3.5 text-ink-muted" aria-hidden="true" />
-          Verified by Aubric
+          Verified by AAP
         </span>
 
         {/* Confidence pip-meter + value. */}

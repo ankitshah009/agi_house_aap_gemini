@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import AapLogo from "./AapLogo";
 
 export default function BrandHeader() {
   const [scrolled, setScrolled] = useState(false);
@@ -20,11 +21,9 @@ export default function BrandHeader() {
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="h-1.5 w-1.5 rounded-full bg-accent"
-            />
+          <div className="flex items-center gap-2.5">
+            <AapLogo />
+            <span aria-hidden="true" className="h-5 w-px bg-border-strong" />
             <h1 className="text-xl font-bold tracking-tight text-ink">
               Ad AI Pulse
             </h1>
