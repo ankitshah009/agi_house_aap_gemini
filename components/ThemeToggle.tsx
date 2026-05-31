@@ -15,7 +15,7 @@ function applyTheme(theme: Theme) {
 export default function ThemeToggle() {
   // Default to light. `mounted` gates the icon swap so SSR (always light) and the
   // first client paint agree, avoiding a hydration mismatch before we read storage.
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function ThemeToggle() {
     } catch {
       stored = null;
     }
-    const next: Theme = stored === "dark" ? "dark" : "light";
+    const next: Theme = stored === "light" ? "light" : "dark";
     setTheme(next);
     applyTheme(next);
     setMounted(true);

@@ -29,8 +29,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen bg-bg text-ink antialiased">{children}</body>
+    <html lang="en" data-theme="dark" className={`${inter.variable} ${geistMono.variable}`}>
+      <body className="min-h-screen bg-canvas text-ink antialiased">{children}</body>
     </html>
   );
 }

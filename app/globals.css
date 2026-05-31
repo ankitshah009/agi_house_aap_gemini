@@ -88,18 +88,18 @@
 
 /* ---- Dark token set: app stage / reel playback. Opt-in via [data-theme="dark"]. ---- */
 [data-theme="dark"] {
-  --color-bg: oklch(20% 0.012 270);
-  --color-surface: oklch(24% 0.014 270);
-  --color-surface-2: oklch(28% 0.014 270);
+  --color-bg: oklch(15% 0.022 280);          /* deep near-black with a faint violet cast */
+  --color-surface: oklch(22% 0.018 280);
+  --color-surface-2: oklch(26% 0.02 280);
   --color-ink: oklch(96% 0.005 270);
   --color-ink-muted: oklch(74% 0.012 270);
   --color-ink-faint: oklch(62% 0.012 270);
-  --color-border: oklch(33% 0.012 270);
-  --color-border-strong: oklch(42% 0.014 270);
-  --color-accent: oklch(70% 0.15 268);
-  --color-accent-quiet: oklch(78% 0.13 268);
-  --color-accent-soft: oklch(30% 0.06 268);
-  --color-accent-ink: oklch(20% 0.02 268);
+  --color-border: oklch(32% 0.02 280);
+  --color-border-strong: oklch(42% 0.025 280);
+  --color-accent: oklch(72% 0.2 272);        /* vivid blue-violet, neon on dark */
+  --color-accent-quiet: oklch(80% 0.16 272);
+  --color-accent-soft: oklch(32% 0.1 275);
+  --color-accent-ink: oklch(16% 0.02 272);
   --shadow-e1: 0 1px 2px oklch(0% 0 0 / 0.4);
   --shadow-e2: 0 1px 2px oklch(0% 0 0 / 0.4), 0 4px 12px oklch(0% 0 0 / 0.45);
 }
@@ -144,6 +144,19 @@
 /* ============================================================
    Utilities — state-only motion, accessible by construction.
    ============================================================ */
+
+/* Neon aurora canvas — soft lens-colored radial glows on the dark page (the brand
+   design language: violet=strategist, blue=executive, cyan=gtm, gold=policy). */
+@utility bg-canvas {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(46% 42% at 5% -8%, oklch(62% 0.22 285 / 0.30), transparent 60%),
+    radial-gradient(40% 40% at 99% 6%, oklch(64% 0.19 245 / 0.24), transparent 58%),
+    radial-gradient(44% 42% at 94% 98%, oklch(72% 0.16 195 / 0.22), transparent 60%),
+    radial-gradient(50% 44% at 28% 110%, oklch(74% 0.16 70 / 0.18), transparent 62%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
 
 /* Quiet entrance for newly-rendered content. ONE earned reveal. */
 @utility enter {

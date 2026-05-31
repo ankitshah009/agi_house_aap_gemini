@@ -114,7 +114,7 @@ export default function PulseConsole() {
   const brief = toBrief(analysis);
 
   return (
-    <div className="min-h-screen flex flex-col bg-bg">
+    <div className="min-h-screen flex flex-col bg-canvas">
       <BrandHeader />
 
       {/* Quiet scope strip (no gradient, no ping) */}
