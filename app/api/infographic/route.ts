@@ -39,6 +39,23 @@ function buildPrompt(title: string, summary: string, brief?: string): string {
   ].join("\n");
 }
 
+// Digest: ONE infographic that combines the top 3 stories of the day, one panel each.
+function buildDigestPrompt(title: string, storiesText: string): string {
+  return [
+    "Design a polished, magazine-quality editorial INFOGRAPHIC, 16:9 landscape: a DAILY DIGEST of the top stories in advertising and AI today.",
+    "",
+    `HEADLINE (render this exact text, large across the top): ${title}`,
+    "",
+    "Show the 3 stories below as connected nodes with simple arrows or connectors that convey the DYNAMICS between them (who pressures whom, what shifts because of what, the shared impact). It must read like a clear map of today's moves, not three isolated boxes. For each story: a simple flat icon, a short bold label (3 to 6 words: who did what), and a one-line impact (5 to 9 words).",
+    "",
+    "THE THREE STORIES (use these exactly, do not invent companies or numbers):",
+    storiesText,
+    "",
+    "STYLE: clean modern editorial diagram, generous whitespace, a restrained palette with a deep indigo accent on a soft near-white background, crisp sans-serif typography, thin connector lines and arrows to show the relationships.",
+    "Every word must be real, correctly spelled English, legible, and meaningful. No gibberish, no lorem ipsum, no real brand logos, no photographs of people, no watermarks.",
+  ].join("\n");
+}
+
 function extractImage(data: Json): { b64: string; mime: string } | null {
   const cand = (((data.candidates as unknown[]) ?? [])[0] ?? {}) as Json;
   const content = (cand.content ?? {}) as Json;
@@ -96,7 +113,8 @@ export async function POST(req: NextRequest) {
     return Response.json({ dataUrl: null, error: "No API key for image generation" });
   }
 
-  const prompt = buildPrompt(title, summary, brief);
+  const kind = body.kind === "digest" ? "digest" : "signal";
+  const prompt = kind === "digest" ? buildDigestPrompt(title, summary) : buildPrompt(title, summary, brief);
 
   // 1) Nano Banana Pro. 2) flash fallback. Either may be swallowed; the client shows a
   //    tasteful placeholder rather than an error.

@@ -7,21 +7,24 @@ type Props = {
   title: string;
   summary: string;
   brief?: string;
+  // "signal" = single-story infographic; "digest" = combined "3 moves + dynamics" map.
+  kind?: "signal" | "digest";
 };
 
 // Module-level cache keyed by title: lazily generate each infographic at most once
 // per session, so re-mounting (tab switches, list re-renders) reuses the result.
 const cache = new Map<string, string | null>();
 
-export default function InfographicCard({ title, summary, brief }: Props) {
-  const [dataUrl, setDataUrl] = useState<string | null>(() => cache.get(title) ?? null);
-  const [loading, setLoading] = useState(() => !cache.has(title));
+export default function InfographicCard({ title, summary, brief, kind = "signal" }: Props) {
+  const cacheKey = `${kind}|${title}`;
+  const [dataUrl, setDataUrl] = useState<string | null>(() => cache.get(cacheKey) ?? null);
+  const [loading, setLoading] = useState(() => !cache.has(cacheKey));
   const requested = useRef(false);
 
   useEffect(() => {
-    // If we already have a cached result for this title, use it and skip the fetch.
-    if (cache.has(title)) {
-      setDataUrl(cache.get(title) ?? null);
+    // If we already have a cached result for this kind+title, use it and skip the fetch.
+    if (cache.has(cacheKey)) {
+      setDataUrl(cache.get(cacheKey) ?? null);
       setLoading(false);
       return;
     }
@@ -36,14 +39,14 @@ export default function InfographicCard({ title, summary, brief }: Props) {
         const res = await fetch("/api/infographic", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, summary, brief }),
+          body: JSON.stringify({ title, summary, brief, kind }),
         });
         const json = (await res.json()) as { dataUrl?: string | null };
         const url = typeof json.dataUrl === "string" ? json.dataUrl : null;
-        cache.set(title, url);
+        cache.set(cacheKey, url);
         if (alive) setDataUrl(url);
       } catch {
-        cache.set(title, null);
+        cache.set(cacheKey, null);
         if (alive) setDataUrl(null);
       } finally {
         if (alive) setLoading(false);
@@ -53,7 +56,7 @@ export default function InfographicCard({ title, summary, brief }: Props) {
     return () => {
       alive = false;
     };
-  }, [title, summary, brief]);
+  }, [cacheKey, title, summary, brief, kind]);
 
   return (
     <figure className="enter rounded-lg border border-border bg-surface overflow-hidden shadow-e1">
