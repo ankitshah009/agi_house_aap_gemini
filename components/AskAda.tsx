@@ -12,13 +12,20 @@ interface Msg {
   text: string;
 }
 
-export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
+export default function AskAda({
+  analysis,
+  roleHint = "",
+}: {
+  analysis: SignalAnalysis;
+  roleHint?: string;
+}) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState("");
   const [project, setProject] = useState("");
   const [editing, setEditing] = useState(false);
+  const [userSet, setUserSet] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const qId = useId();
   const roleId = useId();
@@ -31,11 +38,17 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
         const p = JSON.parse(raw) as { role?: string; project?: string };
         setRole(p.role ?? "");
         setProject(p.project ?? "");
+        if ((p.role ?? "").trim() || (p.project ?? "").trim()) setUserSet(true);
       }
     } catch {
       /* no storage */
     }
   }, []);
+
+  // The top-level persona seeds Ada's role until the user sets their own context.
+  useEffect(() => {
+    if (roleHint && !userSet) setRole(roleHint);
+  }, [roleHint, userSet]);
 
   function saveProfile() {
     try {
@@ -43,6 +56,7 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
     } catch {
       /* ignore */
     }
+    setUserSet(true);
     setEditing(false);
   }
 

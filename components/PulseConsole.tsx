@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Sparkles } from "lucide-react";
 import { CURATED_SIGNALS } from "@/lib/data";
 import { TODAY } from "@/lib/daily";
-import { LENSES } from "@/lib/lenses";
+import { LENSES, LENS_BY_ID } from "@/lib/lenses";
 import type { EngineMode, LensId, MasterBrief as MasterBriefData, SignalAnalysis } from "@/lib/types";
 import { usePulseStream } from "@/hooks/usePulseStream";
 import BrandHeader from "./BrandHeader";
@@ -25,6 +25,8 @@ import InfographicCard from "./InfographicCard";
 import DailyDigest from "./DailyDigest";
 import VoiceBrief from "./VoiceBrief";
 import ModeSwitcher, { type BriefMode } from "./ModeSwitcher";
+import PersonaSelector, { type Persona } from "./PersonaSelector";
+import ReadFocus from "./ReadFocus";
 
 // Active lens-filter chip colors (functional category color; static for Tailwind).
 const LENS_CHIP: Record<LensId, string> = {
@@ -57,6 +59,7 @@ export default function PulseConsole() {
   const stream = usePulseStream(CURATED_SIGNALS[0]);
   const [mode, setMode] = useState<EngineMode>("cached");
   const [briefMode, setBriefMode] = useState<BriefMode>("visual");
+  const [persona, setPersona] = useState<Persona>("all");
   const [selectedId, setSelectedId] = useState<string>(CURATED_SIGNALS[0].id);
   const [activeLens, setActiveLens] = useState<"all" | LensId>("all");
   const [customSignals, setCustomSignals] = useState<SignalAnalysis[]>([]);
@@ -93,6 +96,12 @@ export default function PulseConsole() {
     );
   };
 
+  // Picking a persona re-ranks the focus panel and defaults the lens cards to that role.
+  const onPersona = (p: Persona) => {
+    setPersona(p);
+    setActiveLens(p);
+  };
+
   const onPlayground = (text: string) => {
     if (busy) return;
     pendingCustomRef.current = true;
@@ -125,13 +134,10 @@ export default function PulseConsole() {
         <DailyPulse brief={TODAY} selectedId={selectedId} onDeepDive={onDeepDive} />
       </div>
 
-      {/* The four consumption modes for that one source */}
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-6">
-        <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
-          <p className="text-sm text-ink-muted">
-            Same intelligence, your format right now.
-          </p>
-        </div>
+      {/* Personalize: who you are, then how you want it */}
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-6 flex flex-col gap-3">
+        <p className="text-sm text-ink-muted">Same intelligence. Your role, your format.</p>
+        <PersonaSelector persona={persona} onPersona={onPersona} />
         <ModeSwitcher mode={briefMode} onMode={setBriefMode} />
       </div>
 
@@ -158,9 +164,16 @@ export default function PulseConsole() {
           </div>
         )}
 
-        {/* READ — full breakdown for the selected story, 3-5 min */}
+        {/* READ — combined focus overview first, then the full breakdown, 3-5 min */}
         {briefMode === "read" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="flex flex-col gap-6">
+            <ReadFocus
+              brief={TODAY}
+              persona={persona}
+              selectedId={selectedId}
+              onSelect={onSelect}
+            />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* LEFT RAIL */}
             <div className="lg:col-span-4 flex flex-col gap-5">
               <SignalFeed
@@ -279,11 +292,15 @@ export default function PulseConsole() {
                 provenanceHash={analysis.disclosure.provenanceHash}
               />
             </div>
+            </div>
           </div>
         )}
 
-        {/* Ada is available in every mode (project-aware follow-up) */}
-        <AskAda analysis={analysis} />
+        {/* Ada is available in every mode (project-aware + persona-aware follow-up) */}
+        <AskAda
+          analysis={analysis}
+          roleHint={persona === "all" ? "" : LENS_BY_ID[persona].role}
+        />
       </main>
 
       <footer className="border-t border-border bg-surface">
