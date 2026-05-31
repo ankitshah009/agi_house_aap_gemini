@@ -1,134 +1,227 @@
 @import "tailwindcss";
 
-/* Fonts come from next/font (app/layout.tsx) as CSS variables.
-   Tailwind v4 ships the full default palette, so slate/violet/blue/teal/amber
-   utilities work out of the box — we only define fonts + custom effects here. */
+/* ============================================================
+   Ad AI Pulse — Design Tokens (Tailwind v4 CSS-first @theme)
+   Restrained: ONE accent (indigo) for action/selection/state.
+   Light, editorial-operations surface by default; dark token
+   set for playback/reel stages via [data-theme="dark"].
+   All colors OKLCH. Body >= 4.5:1, large/non-text >= 3:1.
+   ============================================================ */
+
 @theme {
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
+  /* ---- Type ---- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+
+  /* Fixed rem scale, ratio ~1.2 (major second / minor third blend). NOT fluid. */
+  --text-2xs: 0.6875rem;   /* 11px — meta/labels floor (still >=4.5:1 on surface) */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.8125rem;    /* 13px — dense body */
+  --text-base: 0.9375rem;  /* 15px — reading body */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.375rem;     /* 22px */
+  --text-2xl: 1.625rem;    /* 26px */
+  --text-3xl: 2rem;        /* 32px */
+  --text-2xs--line-height: 1rem;
+  --text-xs--line-height: 1.1rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base--line-height: 1.55rem;
+  --text-lg--line-height: 1.6rem;
+  --text-xl--line-height: 1.85rem;
+  --text-2xl--line-height: 2.05rem;
+  --text-3xl--line-height: 2.4rem;
+
+  /* ---- Neutrals (warm paper-white canvas; ink, not pure black) ---- */
+  --color-bg: oklch(99% 0.004 95);          /* page */
+  --color-surface: oklch(100% 0 0);         /* cards */
+  --color-surface-2: oklch(97.4% 0.004 95); /* inset/secondary fills */
+  --color-ink: oklch(24% 0.015 270);        /* primary text ~ 13.5:1 on surface */
+  --color-ink-muted: oklch(45% 0.014 270);  /* secondary text ~ 5.6:1 on surface */
+  --color-ink-faint: oklch(56% 0.012 270);  /* tertiary/meta ~ 3.9:1 -> non-text + large only, NEVER body */
+  --color-border: oklch(92% 0.005 270);     /* hairline */
+  --color-border-strong: oklch(85% 0.008 270);
+
+  /* ---- Accent: indigo. Action / selection / state ONLY. ---- */
+  --color-accent: oklch(54% 0.19 268);          /* buttons, focus ring, selected */
+  --color-accent-hover: oklch(49% 0.2 268);
+  --color-accent-ink: oklch(99% 0.01 268);      /* text/icon on accent fill */
+  --color-accent-soft: oklch(96% 0.03 268);     /* faint indigo tint (selected row bg) */
+  --color-accent-quiet: oklch(45% 0.16 268);    /* indigo text on light, body-contrast safe ~6.2:1 */
+
+  /* ---- Status (semantic, not decorative) ---- */
+  --color-success: oklch(52% 0.13 155);
+  --color-success-soft: oklch(95% 0.04 155);
+  --color-warning: oklch(64% 0.13 75);
+  --color-warning-soft: oklch(95% 0.05 80);
+  --color-danger: oklch(55% 0.19 25);
+  --color-danger-soft: oklch(95% 0.04 25);
+  --color-info: var(--color-accent-quiet);
+
+  /* ---- FOUR lens hues — used ONLY as 8px category dots + 2px tab underline. ---- */
+  --color-lens-strategist: oklch(56% 0.15 285); /* violet  — Agency Strategist */
+  --color-lens-executive: oklch(55% 0.13 245);  /* blue    — Executive Strategy */
+  --color-lens-gtm: oklch(55% 0.1 195);          /* teal    — Adtech & GTM */
+  --color-lens-policy: oklch(60% 0.12 70);       /* amber   — Responsible AI & Policy */
+
+  /* ---- Radii ---- */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-pill: 999px;
+
+  /* ---- Elevation: 1px hairline + 1 soft drop. No glows, ever. ---- */
+  --shadow-e1: 0 1px 2px oklch(24% 0.015 270 / 0.05);
+  --shadow-e2: 0 1px 2px oklch(24% 0.015 270 / 0.05), 0 4px 12px oklch(24% 0.015 270 / 0.06);
+  --shadow-pop: 0 8px 28px oklch(24% 0.015 270 / 0.12);
+
+  /* ---- Motion: 150-250ms, ease-out. State only. ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 130ms;
+  --dur-base: 180ms;
+  --dur-slow: 240ms;
+
+  /* ---- Spacing helper (8px rhythm) ---- */
+  --spacing-gutter: 1.5rem;
+}
+
+/* ---- Dark token set: app stage / reel playback. Opt-in via [data-theme="dark"]. ---- */
+[data-theme="dark"] {
+  --color-bg: oklch(20% 0.012 270);
+  --color-surface: oklch(24% 0.014 270);
+  --color-surface-2: oklch(28% 0.014 270);
+  --color-ink: oklch(96% 0.005 270);
+  --color-ink-muted: oklch(74% 0.012 270);
+  --color-ink-faint: oklch(62% 0.012 270);
+  --color-border: oklch(33% 0.012 270);
+  --color-border-strong: oklch(42% 0.014 270);
+  --color-accent: oklch(70% 0.15 268);
+  --color-accent-quiet: oklch(78% 0.13 268);
+  --color-accent-soft: oklch(30% 0.06 268);
+  --color-accent-ink: oklch(20% 0.02 268);
+  --shadow-e1: 0 1px 2px oklch(0% 0 0 / 0.4);
+  --shadow-e2: 0 1px 2px oklch(0% 0 0 / 0.4), 0 4px 12px oklch(0% 0 0 / 0.45);
 }
 
 @layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
   body {
-    @apply font-sans bg-slate-950 text-slate-100 antialiased;
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv05", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* Single, consistent focus-visible ring tuned to the surface. */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  :where(button, [role="button"]) {
+    cursor: pointer;
+  }
+  :where(button):disabled {
+    cursor: not-allowed;
+  }
+  :where(.tnum) {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
   }
 }
 
-/* ----- Neon glow accents (one per lens family) ----- */
-.neon-glow-red {
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
-}
-.neon-glow-violet {
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
-}
-.neon-glow-blue {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
-}
-.neon-glow-teal {
-  box-shadow: 0 0 15px rgba(20, 184, 166, 0.15);
-}
-.neon-glow-amber {
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
-}
+/* ============================================================
+   Utilities — state-only motion, accessible by construction.
+   ============================================================ */
 
-/* ----- Voice briefing soundwave bars ----- */
-@keyframes voice-wave-bar {
-  0%,
-  100% {
-    transform: scaleY(0.3);
-  }
-  50% {
-    transform: scaleY(1);
-  }
+/* Quiet entrance for newly-rendered content. ONE earned reveal. */
+@utility enter {
+  animation: aap-enter var(--dur-slow) var(--ease-out) both;
 }
-.animate-wave-1 {
-  animation: voice-wave-bar 0.8s ease-in-out infinite;
-}
-.animate-wave-2 {
-  animation: voice-wave-bar 0.5s ease-in-out infinite;
-  animation-delay: 0.15s;
-}
-.animate-wave-3 {
-  animation: voice-wave-bar 0.9s ease-in-out infinite;
-  animation-delay: 0.3s;
-}
-.animate-wave-4 {
-  animation: voice-wave-bar 0.6s ease-in-out infinite;
-  animation-delay: 0.45s;
-}
-.animate-wave-5 {
-  animation: voice-wave-bar 0.7s ease-in-out infinite;
-  animation-delay: 0.6s;
-}
-
-/* ----- Lens Engine orb spin ----- */
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.animate-spin-slow {
-  animation: spin-slow 20s linear infinite;
-}
-
-/* ----- Pulse Cards deal in (staggered fan) ----- */
-@keyframes deal-in {
+@keyframes aap-enter {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.985);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
     transform: none;
   }
 }
-.animate-deal-in {
-  animation: deal-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
 
-/* ----- Reasoning cursor blink ----- */
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
+/* Indeterminate progress shimmer for the reasoning pipeline (state: working). */
+@utility working {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-accent-soft) 0%,
+    var(--color-accent) 50%,
+    var(--color-accent-soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: aap-progress 1.1s linear infinite;
 }
-.animate-blink {
-  animation: blink 1s step-end infinite;
-}
-
-/* ----- Short-form reel beat fade ----- */
-@keyframes reel-in {
-  0% {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  12%,
-  88% {
-    opacity: 1;
-    transform: none;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-18px);
+@keyframes aap-progress {
+  to {
+    background-position: -200% 0;
   }
 }
 
-/* ----- Thin custom scrollbar for the signal feed ----- */
-.thin-scroll::-webkit-scrollbar {
-  width: 6px;
+/* Live status dot — a soft breathe, NOT a neon ping. */
+@utility status-live {
+  animation: aap-breathe 2.4s var(--ease-standard) infinite;
 }
-.thin-scroll::-webkit-scrollbar-track {
-  background: transparent;
+@keyframes aap-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
-.thin-scroll::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 999px;
+
+/* Audio level bars (briefing). Subtle, capped scale. */
+@keyframes aap-level {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
 }
-.thin-scroll {
+@utility level-bar {
+  transform-origin: bottom;
+  animation: aap-level 0.9s var(--ease-standard) infinite;
+}
+
+/* Thin neutral scrollbar. */
+@utility thin-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #1e293b transparent;
+  scrollbar-color: var(--color-border-strong) transparent;
+  &::-webkit-scrollbar { width: 8px; height: 8px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+/* prefers-reduced-motion: kill all motion, keep final state. REQUIRED. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .enter { animation: none; opacity: 1; transform: none; }
+  .working { animation: none; background-position: 0 0; }
+  .status-live { animation: none; }
+  .level-bar { animation: none; transform: scaleY(0.7); }
 }

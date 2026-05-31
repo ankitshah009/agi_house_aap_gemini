@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { EngineMode, SignalAnalysis, StatusEvent } from "@/lib/types";
+import type { AgentEvent, EngineMode, SignalAnalysis, StatusEvent } from "@/lib/types";
 
 export type Phase = "idle" | "reasoning" | "done";
 
@@ -25,6 +25,7 @@ export function usePulseStream(initial: SignalAnalysis) {
   const [analysis, setAnalysis] = useState<SignalAnalysis>(initial);
   const [source, setSource] = useState<EngineMode>("cached");
   const [fallback, setFallback] = useState<string | null>(null);
+  const [agentEvents, setAgentEvents] = useState<AgentEvent[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   const run = useCallback(async (payload: PulseRunPayload) => {
@@ -36,6 +37,7 @@ export function usePulseStream(initial: SignalAnalysis) {
     setLog([]);
     setProgress(0);
     setFallback(null);
+    setAgentEvents([]);
 
     try {
       const res = await fetch("/api/pulse", {
@@ -68,6 +70,10 @@ export function usePulseStream(initial: SignalAnalysis) {
           if (ev.type === "status") {
             setLog((l) => [...l, { stage: ev.stage, label: ev.label, pct: ev.pct, lens: ev.lens }]);
             if (typeof ev.pct === "number") setProgress(ev.pct);
+          } else if (ev.type === "agent") {
+            const aev = ev;
+            setAgentEvents((a) => [...a, aev]);
+            if (typeof aev.pct === "number") setProgress(aev.pct);
           } else if (ev.type === "result") {
             setAnalysis(ev.analysis);
           } else if (ev.type === "fallback") {
@@ -105,5 +111,5 @@ export function usePulseStream(initial: SignalAnalysis) {
     setPhase("done");
   }, []);
 
-  return { phase, log, progress, analysis, source, fallback, run, cancel, show };
+  return { phase, log, progress, analysis, source, fallback, agentEvents, run, cancel, show };
 }

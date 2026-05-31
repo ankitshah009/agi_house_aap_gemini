@@ -5,8 +5,9 @@
 import "server-only";
 import { serverEnv } from "./env";
 import { buildAgentInput, buildFastBody } from "./prompt";
-import { parseAnalysis } from "./parse";
-import type { SignalAnalysis } from "./types";
+import { parseAnalysis, safeParseObject } from "./parse";
+import { buildAgentBody, buildAgentInteractionInput } from "./pipeline/prompts";
+import type { AgentId, SignalAnalysis } from "./types";
 
 const BASE = "https://generativelanguage.googleapis.com";
 
@@ -144,4 +145,82 @@ export async function generateText(
   }
   const data = (await res.json()) as Json;
   return extractFastText(data);
+}
+
+// ── 6-AGENT PIPELINE RUNNERS ────────────────────────────────────────────────
+// These power lib/pipeline/orchestrate.ts. They reuse the SAME extractors
+// (extractFastText / extractAgentText) and the SAME robust JSON recovery
+// (safeParseObject) as the legacy single-call path — no new parsing surface.
+
+export interface StageResult {
+  raw: string;
+  obj: Record<string, unknown>;
+  interactionId?: string;
+}
+
+// Generic structured stage call (Agents 2-6, and Scout in "fast" mode):
+// POST {fastModel}:generateContent with the agent's responseSchema, then recover JSON.
+export async function runStructuredStage(
+  agent: AgentId,
+  ctxJson: string,
+  opts: { timeoutMs?: number } = {},
+): Promise<StageResult> {
+  const key = serverEnv.geminiApiKey;
+  if (!key) throw new Error("GEMINI_API_KEY missing");
+  const res = await fetch(
+    `${BASE}/v1beta/models/${serverEnv.fastModel}:generateContent`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify(buildAgentBody(agent, ctxJson)),
+      signal: AbortSignal.timeout(opts.timeoutMs ?? serverEnv.stageTimeoutMs),
+    },
+  );
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`Gemini HTTP ${res.status}: ${t.slice(0, 200)}`);
+  }
+  const text = extractFastText((await res.json()) as Json);
+  const obj = safeParseObject(text);
+  if (!obj) throw new Error(`stage ${agent}: unparseable structured output`);
+  return { raw: text, obj };
+}
+
+// Antigravity stage (Scout in "agent" mode): live browsing, fenced-JSON contract.
+export async function runScoutAgent(
+  ctxJson: string,
+  opts: { timeoutMs?: number } = {},
+): Promise<StageResult> {
+  const key = serverEnv.geminiApiKey;
+  if (!key) throw new Error("GEMINI_API_KEY missing");
+  const res = await fetch(`${BASE}/v1beta/interactions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": key,
+      "Api-Revision": "2026-05-20",
+    },
+    body: JSON.stringify({
+      agent: "antigravity-preview-05-2026",
+      input: buildAgentInteractionInput("scout", ctxJson),
+      environment: "remote",
+    }),
+    signal: AbortSignal.timeout(opts.timeoutMs ?? serverEnv.agentTimeoutMs),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`Antigravity HTTP ${res.status}: ${t.slice(0, 200)}`);
+  }
+  const data = (await res.json()) as Json;
+  if (typeof data.status === "string" && data.status !== "completed") {
+    throw new Error(`Antigravity status: ${data.status}`);
+  }
+  const text = extractAgentText(data);
+  const obj = safeParseObject(text);
+  if (!obj) throw new Error("scout: unparseable Antigravity output");
+  return {
+    raw: text,
+    obj,
+    interactionId: typeof data.id === "string" ? data.id : undefined,
+  };
 }

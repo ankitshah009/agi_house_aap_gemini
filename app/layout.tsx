@@ -1,45 +1,36 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const playfair = Playfair_Display({
+// ONE primary sans (Inter — the de-facto product-UI typeface) + ONE mono (Geist Mono,
+// for figures/hashes/timestamps only). The 3-font Playfair/Jakarta/JetBrains
+// maximalism is cut; Rachel's editorial voice is carried by prose hierarchy + italics.
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-playfair",
+  variable: "--font-inter",
   display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-jakarta",
-  display: "swap",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-jetbrains",
+  weight: ["400", "500"],
+  variable: "--font-geist-mono",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Ad AI Pulse — From Signal to Strategy",
   description:
-    "AI-native intelligence for the AdTech and AI economy. The AAP Lens Engine turns one signal into four role-specific decisions. Produced by Ada · Reviewed by Rachel.",
+    "AI-native intelligence for the AdTech and AI economy. The AAP Lens Engine turns one signal into four role-specific decisions. Produced by Ada, reviewed by Rachel.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${playfair.variable} ${jakarta.variable} ${jetbrains.variable}`}
-    >
-      <body className="min-h-screen bg-slate-950 text-slate-100">{children}</body>
+    <html lang="en" className={`${inter.variable} ${geistMono.variable}`}>
+      <body className="min-h-screen bg-bg text-ink antialiased">{children}</body>
     </html>
   );
 }

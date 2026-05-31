@@ -1,17 +1,50 @@
 "use client";
 
-import { CheckCircle2, ArrowUpRight, FileText } from "lucide-react";
+import { CheckCircle2, FileText } from "lucide-react";
 import type { PulseCard, LensId } from "@/lib/types";
-import { LENS_BY_ID, withAlpha } from "@/lib/lenses";
+import { LENS_BY_ID } from "@/lib/lenses";
 import { LENS_ICON } from "./lensIcons";
 import type { ReactNode } from "react";
 
-const STEP_LABELS = ["NOW · 0–30d", "NEXT · 30–90d", "LATER · 90d+"];
+const STEP_LABELS = ["Now", "Next", "Later"];
+
+// Per-lens color identity. Color here is FUNCTIONAL (which role's decision this is),
+// so each card wears its lens hue: tinted header, colored icon tile, colored score.
+// Static class strings so Tailwind v4 generates the token + opacity utilities.
+const LENS_STYLE: Record<
+  LensId,
+  { headerBg: string; text: string; border: string; iconBg: string }
+> = {
+  strategist: {
+    headerBg: "bg-lens-strategist/10",
+    text: "text-lens-strategist",
+    border: "border-lens-strategist/35",
+    iconBg: "bg-lens-strategist/15",
+  },
+  executive: {
+    headerBg: "bg-lens-executive/10",
+    text: "text-lens-executive",
+    border: "border-lens-executive/35",
+    iconBg: "bg-lens-executive/15",
+  },
+  gtm: {
+    headerBg: "bg-lens-gtm/10",
+    text: "text-lens-gtm",
+    border: "border-lens-gtm/35",
+    iconBg: "bg-lens-gtm/15",
+  },
+  policy: {
+    headerBg: "bg-lens-policy/10",
+    text: "text-lens-policy",
+    border: "border-lens-policy/35",
+    iconBg: "bg-lens-policy/15",
+  },
+};
 
 function boldify(text: string): ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
     p.startsWith("**") && p.endsWith("**") ? (
-      <strong key={i} className="text-white font-bold">
+      <strong key={i} className="font-semibold text-ink">
         {p.slice(2, -2)}
       </strong>
     ) : (
@@ -30,105 +63,67 @@ export default function LensCards({
   const visible = activeLens === "all" ? cards : cards.filter((c) => c.lens === activeLens);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      {visible.map((card, idx) => {
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {visible.map((card) => {
         const meta = LENS_BY_ID[card.lens];
         const Icon = LENS_ICON[card.lens];
+        const s = LENS_STYLE[card.lens];
         return (
           <article
             key={card.lens}
-            className="animate-deal-in rounded-xl border bg-slate-900/30 p-5 pt-0 flex flex-col overflow-hidden"
-            style={{
-              animationDelay: `${idx * 70}ms`,
-              borderColor: withAlpha(meta.color, 0.25),
-              boxShadow: `0 0 20px ${withAlpha(meta.color, 0.06)}`,
-            }}
+            className={`enter flex flex-col overflow-hidden rounded-lg border ${s.border} bg-surface shadow-e1`}
           >
-            <div className="h-0.5 -mx-5 mb-4" style={{ backgroundColor: meta.color }} />
-
-            <div className="flex items-start justify-between gap-3 border-b border-slate-800/70 pb-3 mb-3">
-              <div className="flex items-center gap-2">
+            {/* Colored identity header */}
+            <header className={`flex items-start justify-between gap-3 border-b ${s.border} ${s.headerBg} px-4 py-3`}>
+              <div className="flex items-center gap-2.5 min-w-0">
                 <span
-                  className="p-1.5 rounded-lg"
-                  style={{ backgroundColor: withAlpha(meta.color, 0.12), color: meta.color }}
+                  className={`flex h-9 w-9 items-center justify-center rounded-md ${s.iconBg} ${s.text} shrink-0`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="h-4.5 w-4.5" aria-hidden="true" />
                 </span>
-                <div>
-                  <span
-                    className="text-[10px] font-mono uppercase tracking-widest block font-bold"
-                    style={{ color: meta.color }}
-                  >
-                    {meta.role}
-                  </span>
-                  <h3 className="font-sans font-extrabold text-sm text-white tracking-tight mt-0.5">
-                    {card.title}
-                  </h3>
+                <div className="min-w-0">
+                  <div className={`text-sm font-semibold ${s.text}`}>{meta.role}</div>
+                  <div className="text-2xs text-ink-muted">{card.title}</div>
                 </div>
               </div>
-
-              <div
-                className="flex flex-col items-center px-2.5 py-1 rounded-lg border font-mono shrink-0"
-                style={{
-                  borderColor: withAlpha(meta.color, 0.3),
-                  backgroundColor: withAlpha(meta.color, 0.08),
-                  color: meta.color,
-                }}
-              >
-                <span className="text-[7px] uppercase tracking-wider text-slate-400 leading-none text-center">
-                  {card.scoreName}
-                </span>
-                <span className="text-xl font-black tracking-tighter leading-none mt-1 tabular-nums">
+              <div className="text-right shrink-0">
+                <div className={`text-2xl font-semibold tnum leading-none ${s.text}`}>
                   {card.score}
-                </span>
+                </div>
+                <div className="text-2xs text-ink-faint mt-1">{card.scoreName}</div>
               </div>
-            </div>
+            </header>
 
-            <div className="bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/50 text-[11px] font-mono mb-3 text-slate-400 flex items-start gap-1.5">
-              <ArrowUpRight className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: meta.color }} />
-              <p>
-                <span className="text-slate-300 font-bold uppercase tracking-wider">Perspective: </span>
-                &ldquo;{card.voiceDescription}&rdquo;
-              </p>
-            </div>
+            {/* Body */}
+            <div className="flex flex-1 flex-col gap-3 p-4">
+              <p className="text-sm italic text-ink-muted leading-snug">{card.voiceDescription}</p>
+              <p className="text-sm text-ink leading-relaxed">{card.brief}</p>
 
-            <p className="text-xs text-slate-200 leading-relaxed mb-3 font-sans">{card.brief}</p>
+              <ul className="space-y-1.5">
+                {card.bullets.map((b, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-ink leading-snug">
+                    <CheckCircle2 className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${s.text}`} aria-hidden="true" />
+                    <span>{boldify(b)}</span>
+                  </li>
+                ))}
+              </ul>
 
-            <ul className="space-y-2 mb-4">
-              {card.bullets.map((b, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-slate-300 leading-normal">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>{boldify(b)}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="border-t border-slate-800/60 pt-3 mt-auto">
-              <span className="text-[9px] font-mono tracking-widest text-slate-500 uppercase block mb-2">
-                Action Ladder · To-Ship
-              </span>
-              <div className="space-y-2">
+              <div className="mt-auto space-y-1.5 pt-1">
                 {card.actionSteps.slice(0, 3).map((step, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-2 bg-slate-950/70 border border-slate-900 px-2.5 py-2 rounded-lg text-xs"
-                  >
-                    <span
-                      className="text-[8px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 mt-0.5 whitespace-nowrap"
-                      style={{ color: meta.color, backgroundColor: withAlpha(meta.color, 0.1) }}
-                    >
-                      {STEP_LABELS[i] ?? `STEP ${i + 1}`}
+                  <div key={i} className="flex items-start gap-2 rounded-md bg-surface-2 px-2.5 py-1.5">
+                    <span className={`w-9 shrink-0 text-2xs font-semibold ${s.text}`}>
+                      {STEP_LABELS[i] ?? `#${i + 1}`}
                     </span>
-                    <span className="text-slate-200 font-sans leading-snug">{step}</span>
+                    <span className="text-xs text-ink leading-snug">{step}</span>
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-mono">
-              <FileText className="w-3.5 h-3.5" style={{ color: meta.color }} />
-              <span className="text-slate-500">Deliverable:</span>
-              <span className="text-slate-300 font-semibold">{card.title}</span>
+              <div className="mt-1 flex items-center gap-1.5 border-t border-border pt-2.5 text-xs">
+                <FileText className={`h-3.5 w-3.5 ${s.text}`} aria-hidden="true" />
+                <span className="text-ink-faint">Deliverable:</span>
+                <span className="font-medium text-ink">{card.title}</span>
+              </div>
             </div>
           </article>
         );

@@ -22,6 +22,8 @@ export const serverEnv = {
   agentTimeoutMs: Number(process.env.PULSE_TIMEOUT_MS ?? 150_000),
   // Fast-path timeout.
   fastTimeoutMs: Number(process.env.FAST_TIMEOUT_MS ?? 60_000),
+  // Each structured pipeline stage (Agents 2-6, and Scout in "fast" mode).
+  stageTimeoutMs: Number(process.env.STAGE_TIMEOUT_MS ?? 30_000),
 } as const;
 
 export function hasGeminiKey(): boolean {

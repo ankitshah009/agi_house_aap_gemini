@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useId } from "react";
 import { Send, Sparkles } from "lucide-react";
 import type { SignalAnalysis } from "@/lib/types";
 import { LENS_BY_ID } from "@/lib/lenses";
@@ -21,6 +21,7 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const fieldId = useId();
 
   const context =
     `${analysis.title}\nSummary: ${analysis.summary}\n` +
@@ -44,7 +45,7 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
     } catch {
       setMessages((m) => [
         ...m,
-        { role: "ada", text: "I'm offline this second — try again in a moment." },
+        { role: "ada", text: "I'm offline this second. Try again in a moment." },
       ]);
     } finally {
       setLoading(false);
@@ -53,17 +54,13 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/30 p-5">
-      <div className="flex items-center gap-2 mb-3 border-b border-slate-800/70 pb-2.5">
-        <span className="w-7 h-7 rounded bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-300 font-mono text-[10px] font-black">
-          ADA
-        </span>
+    <div className="rounded-lg border border-border bg-surface p-5 shadow-e1">
+      <div className="flex items-center gap-2 mb-3 border-b border-border pb-2.5">
+        <Sparkles className="w-4 h-4 text-ink-faint" />
         <div>
-          <h3 className="text-xs font-sans font-bold text-white flex items-center gap-1.5">
-            Ask Ada <Sparkles className="w-3 h-3 text-violet-400" />
-          </h3>
-          <p className="text-[10px] font-mono text-slate-500">
-            Follow-up questions about this brief — go deeper.
+          <h3 className="text-sm font-semibold text-ink">Ask Ada</h3>
+          <p className="text-xs text-ink-muted">
+            Follow-up questions about this brief. Go deeper.
           </p>
         </div>
       </div>
@@ -76,14 +73,14 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
               className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed ${
+                className={`max-w-[85%] rounded-md px-3 py-2 text-sm leading-relaxed ${
                   m.role === "user"
-                    ? "bg-indigo-600/20 border border-indigo-500/30 text-slate-100"
-                    : "bg-slate-950/60 border border-slate-800 text-slate-300"
+                    ? "bg-accent-soft border border-accent text-ink"
+                    : "bg-surface-2 border border-border text-ink"
                 }`}
               >
                 {m.role === "ada" && (
-                  <span className="block text-[9px] font-mono text-violet-400 uppercase tracking-wider mb-1">
+                  <span className="block text-2xs font-medium text-ink-faint mb-1">
                     Ada
                   </span>
                 )}
@@ -93,8 +90,8 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
           ))}
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-500 font-mono">
-                Ada is thinking<span className="animate-blink">▌</span>
+              <div className="bg-surface-2 border border-border rounded-md px-3 py-2 text-sm text-ink-muted">
+                Ada is thinking<span className="text-ink-muted">▌</span>
               </div>
             </div>
           )}
@@ -108,7 +105,7 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
               key={s}
               onClick={() => ask(s)}
               disabled={loading}
-              className="text-[10px] font-sans text-slate-300 bg-slate-950/60 border border-slate-800 hover:border-violet-500/40 hover:text-white rounded-full px-2.5 py-1 transition-colors disabled:opacity-50"
+              className="min-h-9 text-xs text-ink-muted bg-surface-2 border border-border hover:border-border-strong rounded-full px-3 py-1 transition-colors duration-fast disabled:opacity-50"
             >
               {s}
             </button>
@@ -123,17 +120,22 @@ export default function AskAda({ analysis }: { analysis: SignalAnalysis }) {
         }}
         className="flex items-center gap-2"
       >
+        <label htmlFor={fieldId} className="sr-only">
+          Ask Ada about this signal
+        </label>
         <input
+          id={fieldId}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask Ada about this signal…"
+          placeholder="Ask Ada about this signal."
           disabled={loading}
-          className="flex-1 bg-slate-950/80 border border-slate-800 focus:border-violet-500/50 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 outline-none transition-colors"
+          className="flex-1 min-h-11 bg-surface-2 border border-border rounded-md px-3 py-2 text-sm text-ink placeholder:text-ink-faint transition-colors duration-base"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-lg p-2 transition-all disabled:opacity-40"
+          aria-label="Send question"
+          className="min-h-11 min-w-11 flex items-center justify-center bg-accent text-accent-ink hover:bg-accent-hover rounded-md transition-colors duration-fast disabled:opacity-40"
         >
           <Send className="w-4 h-4" />
         </button>

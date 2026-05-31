@@ -90,86 +90,80 @@ export default function AudioBriefing({
     playBrowser();
   };
 
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-600/10 to-teal-400/0 rounded-full blur-2xl pointer-events-none" />
+  const comment =
+    rachelComment.length > 96 ? rachelComment.slice(0, 96) + "…" : rachelComment;
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
+  return (
+    <div className="rounded-lg border border-border bg-surface p-5 shadow-e1">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="flex items-start gap-3">
-          <div className="relative">
-            <div className="w-12 h-12 rounded-full border-2 border-amber-500 bg-slate-800 flex items-center justify-center text-amber-500 font-bold text-lg shrink-0 shadow-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              R
-            </div>
-            {isPlaying && (
-              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse" />
-            )}
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 text-lg font-semibold text-ink">
+            R
           </div>
           <div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="font-sans font-bold text-sm text-slate-100">Rachel — Editor-in-Chief</h3>
-              <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded font-mono">
-                30s Briefing
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-ink">Rachel, Editor-in-Chief</h3>
+              <span className="text-2xs text-ink-faint">30s briefing</span>
             </div>
-            <p
-              className="text-xs text-slate-400 italic mt-0.5 max-w-md"
-              style={{ fontFamily: "var(--font-serif)" }}
-            >
-              &ldquo;{rachelComment.length > 96 ? rachelComment.slice(0, 96) + "…" : rachelComment}&rdquo;
+            <p className="mt-1 max-w-md text-sm italic text-ink-muted">
+              &ldquo;{comment}&rdquo;
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex shrink-0 items-center gap-3">
           {isPlaying && (
-            <div className="flex items-end gap-1 px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 h-8">
-              <div className="w-1 h-full bg-teal-400 rounded-sm origin-bottom animate-wave-1" />
-              <div className="w-1 h-full bg-teal-400 rounded-sm origin-bottom animate-wave-2" />
-              <div className="w-1 h-full bg-teal-400 rounded-sm origin-bottom animate-wave-3" />
-              <div className="w-1 h-full bg-teal-400 rounded-sm origin-bottom animate-wave-4" />
-              <div className="w-1 h-full bg-teal-400 rounded-sm origin-bottom animate-wave-5" />
+            <div
+              className="flex h-9 items-end gap-1 rounded-md border border-border bg-surface-2 px-2.5 py-2"
+              aria-hidden="true"
+            >
+              {[0, 0.12, 0.24, 0.36, 0.48].map((delay, i) => (
+                <span
+                  key={i}
+                  className="level-bar h-full w-1 rounded-sm bg-accent"
+                  style={{ animationDelay: `${delay}s` }}
+                />
+              ))}
             </div>
           )}
           <button
             onClick={toggle}
             disabled={isLoading}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all uppercase ${
+            aria-pressed={isPlaying}
+            className={`flex min-h-11 items-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors disabled:opacity-50 ${
               isPlaying
-                ? "bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600/30"
-                : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md shadow-violet-900/20"
-            } disabled:opacity-50`}
+                ? "border border-border bg-surface-2 text-ink hover:bg-surface"
+                : "bg-accent text-accent-ink hover:bg-accent-hover"
+            }`}
           >
             {isLoading ? (
               <>
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="working h-3.5 w-3.5 rounded-full" />
                 <span>Synthesizing…</span>
               </>
             ) : isPlaying ? (
               <>
-                <Square className="w-3.5 h-3.5 fill-current" />
+                <Square className="h-3.5 w-3.5 fill-current" />
                 <span>Stop</span>
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Play Briefing</span>
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>Play briefing</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      <div className="mt-4 bg-slate-950/50 rounded-lg p-3.5 border border-slate-800/60 max-h-32 overflow-y-auto thin-scroll">
-        <div className="flex items-center gap-1 mb-1 bg-slate-900/60 px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 w-fit">
-          <Mic className="w-3 h-3 text-amber-500" />
+      <div className="thin-scroll mt-4 max-h-32 overflow-y-auto rounded-md border border-border bg-surface-2 p-3.5">
+        <div className="mb-1.5 flex w-fit items-center gap-1.5 text-2xs text-ink-faint">
+          <Mic className="h-3 w-3 text-ink-faint" />
           <span>
-            AUDIO SCRIPT · {via ? `AI VOICE VIA ${via.toUpperCase()}` : "AI-GENERATED VOICE (DISCLOSED)"}
+            Audio script. {via ? `AI voice via ${via}.` : "AI-generated voice, disclosed."}
           </span>
         </div>
-        <p
-          className="text-xs text-slate-300 leading-relaxed italic"
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
+        <p className="text-sm italic leading-relaxed text-ink-muted">
           &ldquo;{script}&rdquo;
         </p>
       </div>

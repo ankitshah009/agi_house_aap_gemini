@@ -52,6 +52,15 @@ function tryParse(candidate: string): Record<string, unknown> | null {
   return null;
 }
 
+// Robust single-object extractor for the 6-agent pipeline stages. Reuses the SAME
+// fenced-block extractor + lenient parser the legacy path uses, so structured stages
+// (and the Antigravity Scout) recover from preamble, smart quotes, and trailing commas.
+// Returns null instead of throwing so callers can degrade gracefully per-stage.
+export function safeParseObject(rawText: string): Record<string, unknown> | null {
+  if (!rawText || !rawText.trim()) return null;
+  return tryParse(extractCandidate(rawText));
+}
+
 const str = (v: unknown, fallback = ""): string =>
   typeof v === "string" && v.trim() ? v.trim() : fallback;
 

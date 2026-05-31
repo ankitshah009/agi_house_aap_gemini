@@ -1,6 +1,6 @@
 "use client";
 
-import { Newspaper, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import type { SignalAnalysis } from "@/lib/types";
 
 export default function SignalFeed({
@@ -17,74 +17,69 @@ export default function SignalFeed({
   disabled?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/20 p-5 space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
-        <div className="flex items-center gap-1.5">
-          <Newspaper className="w-4 h-4 text-slate-400" />
-          <h2 className="font-sans font-extrabold text-xs uppercase tracking-widest text-slate-300">
-            Signal Dispatch Feed
-          </h2>
-        </div>
-        <span className="text-[9px] font-mono bg-slate-950 px-2 py-0.5 rounded text-slate-500 border border-slate-900 uppercase">
-          {signals.length} live
+    <div className="rounded-lg border border-border bg-surface p-4 shadow-e1">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-ink">Signal feed</h2>
+        <span className="text-2xs tabular-nums text-ink-faint tnum">
+          {signals.length} signals
         </span>
       </div>
 
-      <div className="space-y-3 max-h-[44vh] overflow-y-auto thin-scroll pr-1">
+      <ul className="enter -mx-1 max-h-[44vh] space-y-1 overflow-y-auto px-1 thin-scroll">
         {signals.map((sig) => {
           const isSelected = selectedId === sig.id;
           const isCustom = customIds?.has(sig.id);
+          const hot = sig.hypeCheckScore > 85;
           return (
-            <button
-              key={sig.id}
-              onClick={() => onSelect(sig.id)}
-              disabled={disabled}
-              className={`w-full text-left p-3.5 rounded-xl border transition-all duration-200 flex flex-col relative overflow-hidden group disabled:opacity-60 ${
-                isSelected
-                  ? "bg-slate-900 border-indigo-500/80"
-                  : "bg-slate-950/40 border-slate-900 hover:bg-slate-900/60"
-              }`}
-            >
-              {isSelected && (
-                <div className="absolute top-0 right-0 w-1.5 h-full bg-gradient-to-b from-violet-500 to-indigo-600" />
-              )}
-              <div className="flex items-center justify-between gap-2 mb-2 flex-wrap text-[10px] font-mono leading-none">
-                <span className="text-slate-500 flex items-center gap-1.5 font-medium">
-                  <Clock className="w-3 h-3" />
-                  {sig.date}
-                </span>
-                {isCustom ? (
-                  <span className="bg-violet-500/10 text-violet-400 border border-violet-500/20 px-1.5 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
-                    Playground
-                  </span>
-                ) : (
-                  <span className="bg-slate-950/80 text-slate-400 px-1.5 py-0.5 rounded border border-slate-800/80 font-medium">
-                    Vetted Brief
-                  </span>
-                )}
-              </div>
-              <h3
-                className={`font-sans font-bold text-xs tracking-tight leading-snug group-hover:text-indigo-300 transition-colors ${
-                  isSelected ? "text-white" : "text-slate-300"
+            <li key={sig.id}>
+              <button
+                type="button"
+                onClick={() => onSelect(sig.id)}
+                disabled={disabled}
+                aria-pressed={isSelected}
+                className={`relative flex min-h-11 w-full flex-col gap-2 rounded-md border px-3 py-3 text-left transition-colors duration-[130ms] disabled:opacity-60 ${
+                  isSelected
+                    ? "border-accent bg-accent-soft"
+                    : "border-border bg-surface hover:bg-surface-2"
                 }`}
               >
-                {sig.title}
-              </h3>
-              <div className="mt-3 pt-2.5 border-t border-slate-900/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-900 text-indigo-400 font-bold tracking-tight truncate max-w-[60%]">
-                  {sig.category}
-                </span>
-                <span className="flex items-center gap-1">
-                  Hype:{" "}
-                  <span className={sig.hypeCheckScore > 85 ? "text-emerald-400" : "text-amber-400"}>
-                    {sig.hypeCheckScore}%
+                {isSelected && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-accent"
+                  />
+                )}
+
+                <div className="flex items-center justify-between gap-2 text-2xs text-ink-muted">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="h-3 w-3 text-ink-faint" aria-hidden="true" />
+                    <span className="tnum">{sig.date}</span>
                   </span>
-                </span>
-              </div>
-            </button>
+                  <span className="text-ink-faint">
+                    {isCustom ? "Playground" : "Vetted brief"}
+                  </span>
+                </div>
+
+                <h3 className="text-sm font-medium leading-snug text-ink">
+                  {sig.title}
+                </h3>
+
+                <div className="flex items-center justify-between gap-2 text-2xs">
+                  <span className="truncate text-ink-muted">{sig.category}</span>
+                  <span className="flex shrink-0 items-center gap-1 text-ink-muted">
+                    Hype
+                    <span
+                      className={`tnum font-semibold ${hot ? "text-success" : "text-warning"}`}
+                    >
+                      {sig.hypeCheckScore}%
+                    </span>
+                  </span>
+                </div>
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </div>
   );
 }

@@ -1,51 +1,41 @@
 "use client";
 
-import { Clock, Zap } from "lucide-react";
+import { Clock } from "lucide-react";
 import type { SignalAnalysis } from "@/lib/types";
-import { LENS_BY_ID, withAlpha } from "@/lib/lenses";
-import { LENS_ICON } from "./lensIcons";
+import { LENS_BY_ID } from "@/lib/lenses";
 
-// A glanceable "60-second daily brief" — one signal, four scored lenses, the NOW move each.
+// A glanceable "60-second daily brief": one signal, four scored lenses, the NOW move each.
 export default function DailyBriefInfographic({ analysis }: { analysis: SignalAnalysis }) {
   const primary = analysis.cards.reduce((a, b) => (b.score > a.score ? b : a));
   const primaryMeta = LENS_BY_ID[primary.lens];
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-gradient-to-b from-slate-900/40 to-slate-950/60 p-5 md:p-6 space-y-5">
+    <div className="enter rounded-lg border border-border bg-surface p-5 md:p-6 space-y-5 shadow-e1">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-slate-400">
-          <Clock className="w-3.5 h-3.5" />
-          60-Second Daily Brief · {analysis.date}
+        <div className="flex items-center gap-2 text-2xs text-ink-faint">
+          <Clock className="w-3.5 h-3.5 text-ink-faint" aria-hidden="true" />
+          60-second daily brief. {analysis.date}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-slate-500 uppercase">Grounding</span>
-          <span className="text-sm font-mono font-black text-violet-400 tabular-nums">
-            {analysis.hypeCheckScore}%
-          </span>
+          <span className="text-2xs text-ink-faint">Grounding</span>
+          <span className="text-base font-semibold tnum text-ink">{analysis.hypeCheckScore}%</span>
         </div>
       </div>
 
       <div>
-        <h2
-          className="text-lg md:text-xl text-white font-semibold leading-tight"
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
-          {analysis.title}
-        </h2>
-        <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{analysis.summary}</p>
+        <h2 className="text-xl font-semibold leading-tight text-ink">{analysis.title}</h2>
+        <p className="text-sm text-ink-muted mt-1.5 leading-relaxed">{analysis.summary}</p>
       </div>
 
       {/* Primary lens callout */}
-      <div
-        className="rounded-lg border p-3 flex items-center gap-3"
-        style={{ borderColor: withAlpha(primaryMeta.color, 0.4), backgroundColor: withAlpha(primaryMeta.color, 0.08) }}
-      >
-        <Zap className="w-4 h-4 shrink-0" style={{ color: primaryMeta.color }} />
-        <p className="text-[11px] text-slate-300">
-          <span className="font-mono uppercase tracking-wider font-bold" style={{ color: primaryMeta.color }}>
-            Top lens · {primaryMeta.role}
-          </span>{" "}
-          — this signal matters most to {primaryMeta.role.toLowerCase()}s ({primary.scoreName}{" "}
+      <div className="rounded-lg border border-border bg-surface-2 p-3 flex items-center gap-3">
+        <span
+          className={`w-2 h-2 rounded-full shrink-0 ${primaryMeta.dotClass}`}
+          aria-hidden="true"
+        />
+        <p className="text-sm text-ink-muted">
+          <span className="font-semibold text-ink">Top lens: {primaryMeta.role}.</span>{" "}
+          This signal matters most to {primaryMeta.role.toLowerCase()}s ({primary.scoreName}{" "}
           {primary.score}).
         </p>
       </div>
@@ -54,38 +44,30 @@ export default function DailyBriefInfographic({ analysis }: { analysis: SignalAn
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {analysis.cards.map((c) => {
           const meta = LENS_BY_ID[c.lens];
-          const Icon = LENS_ICON[c.lens];
           return (
             <div
               key={c.lens}
-              className="rounded-lg border border-slate-800 bg-slate-950/40 p-3 space-y-2"
-              style={{ borderColor: withAlpha(meta.color, 0.2) }}
+              className="rounded-lg border border-border bg-surface-2 p-3 space-y-2"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Icon className="w-3.5 h-3.5" style={{ color: meta.color }} />
-                  <span className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: meta.color }}>
-                    {meta.role}
-                  </span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${meta.dotClass}`}
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-semibold text-ink truncate">{meta.role}</span>
                 </div>
-                <span className="text-base font-mono font-black tabular-nums" style={{ color: meta.color }}>
-                  {c.score}
-                </span>
+                <span className="text-lg font-semibold tnum text-ink">{c.score}</span>
               </div>
-              <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${c.score}%`, backgroundColor: meta.color }}
+                  className="h-full rounded-full transition-[width] duration-180 ease-out"
+                  style={{ width: `${c.score}%`, backgroundColor: meta.cssVar }}
                 />
               </div>
-              <p className="text-[11px] text-slate-300 leading-snug line-clamp-2">{c.brief}</p>
-              <div className="flex items-start gap-1.5 text-[10px] text-slate-400">
-                <span
-                  className="font-mono font-bold uppercase shrink-0"
-                  style={{ color: meta.color }}
-                >
-                  Now:
-                </span>
+              <p className="text-sm text-ink-muted leading-snug line-clamp-2">{c.brief}</p>
+              <div className="flex items-start gap-1.5 text-2xs text-ink-muted">
+                <span className="font-medium shrink-0">Now:</span>
                 <span className="line-clamp-2">{c.actionSteps[0]}</span>
               </div>
             </div>
@@ -93,8 +75,8 @@ export default function DailyBriefInfographic({ analysis }: { analysis: SignalAn
         })}
       </div>
 
-      <p className="text-[10px] font-mono text-slate-500 text-center pt-1">
-        Produced by Ada · Reviewed by Rachel · Sources available
+      <p className="text-2xs text-ink-faint text-center pt-1">
+        Produced by Ada. Reviewed by Rachel. Sources available.
       </p>
     </div>
   );

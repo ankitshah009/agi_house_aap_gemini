@@ -1,8 +1,18 @@
 import type { NextRequest } from "next/server";
 import { CURATED_SIGNALS } from "@/lib/data";
 import { serverEnv } from "@/lib/env";
-import { runAgentEngine, runFastEngine, runFastSafe } from "@/lib/agent";
-import type { EngineMode, LensId, SignalAnalysis, StatusEvent } from "@/lib/types";
+import { runFastSafe } from "@/lib/agent";
+import { runPipeline } from "@/lib/pipeline/orchestrate";
+import {
+  AGENT_ORDER,
+  AGENT_META,
+  type AgentEvent,
+  type AgentId,
+  type EngineMode,
+  type PipelineStage,
+  type SignalAnalysis,
+  type StatusEvent,
+} from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,28 +22,16 @@ const HERO = CURATED_SIGNALS[0];
 const enc = new TextEncoder();
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-interface ReasoningStep {
-  stage: string;
-  label: string;
-  pct: number;
-  lens?: LensId;
-}
-
-// The visible content-gen pipeline: source -> filter -> frame x4 -> review -> publish.
-const REASONING: ReasoningStep[] = [
-  { stage: "source", label: "Ada — scanning the signal across live sources…", pct: 10 },
-  { stage: "filter", label: "Anti-hype grounding check (fact vs. marketing)…", pct: 24 },
-  { stage: "frame", label: "Framing the Agency Strategist lens…", pct: 40, lens: "strategist" },
-  { stage: "frame", label: "Framing the Executive Strategy lens…", pct: 55, lens: "executive" },
-  { stage: "frame", label: "Framing the Adtech & GTM lens…", pct: 70, lens: "gtm" },
-  { stage: "frame", label: "Framing the Responsible AI & Policy lens…", pct: 82, lens: "policy" },
-  { stage: "review", label: "Rachel — Editor-in-Chief reviewing & signing off…", pct: 92 },
-  { stage: "publish", label: "Publishing four Pulse Cards…", pct: 98 },
-];
-
-type Settled =
-  | { ok: true; analysis: SignalAnalysis }
-  | { ok: false; message: string };
+// Map an AgentId -> a legacy PipelineStage so the existing ReasoningPanel (which keys
+// off {type:"status"}) still lights up while the new 6-lane tracker reads {type:"agent"}.
+const AGENT_TO_LEGACY_STAGE: Record<AgentId, PipelineStage> = {
+  scout: "source",
+  verify: "filter",
+  rank: "filter",
+  brief: "frame",
+  lens: "frame",
+  editorial: "review",
+};
 
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown> = {};
@@ -54,8 +52,6 @@ export async function POST(req: NextRequest) {
   const fixture = signalId
     ? CURATED_SIGNALS.find((s) => s.id === signalId)
     : undefined;
-  const signalText =
-    freeSignal || (fixture ? `${fixture.title}. ${fixture.originalText}` : HERO.originalText);
 
   const runId = `run-${Math.random().toString(16).slice(2, 8)}`;
   const t0 = Date.now();
@@ -66,59 +62,67 @@ export async function POST(req: NextRequest) {
         controller.enqueue(enc.encode(JSON.stringify(e) + "\n"));
 
       try {
+        // ── CACHED MODE: bulletproof. Replay scripted agent events + legacy
+        //    heartbeat, then emit the fixture. Never touches the live pipeline.
         if (mode === "cached") {
-          const analysis = fixture ?? (await runFastSafe(signalText)) ?? HERO;
-          for (const r of REASONING) {
-            send({ type: "status", stage: r.stage, label: r.label, pct: r.pct, lens: r.lens });
-            await sleep(360);
+          const analysis =
+            fixture ?? (freeSignal ? await runFastSafe(freeSignal) : null) ?? HERO;
+          // Scripted 6-agent narration (start -> done) interleaved with the
+          // legacy REASONING heartbeat, so BOTH the 6-lane tracker and the old
+          // ReasoningPanel animate from one stream.
+          for (let i = 0; i < AGENT_ORDER.length; i++) {
+            const agent = AGENT_ORDER[i];
+            const meta = AGENT_META[agent];
+            const pct = Math.round(((i + 1) / AGENT_ORDER.length) * 96);
+            send({ type: "agent", agent, phase: "start", pct, label: `${meta.name} — ${meta.role}` });
+            send({
+              type: "status",
+              stage: AGENT_TO_LEGACY_STAGE[agent],
+              label: `${meta.name} — ${meta.role}`,
+              pct,
+            });
+            await sleep(300);
+            send({ type: "agent", agent, phase: "done", pct, label: scriptedDone(agent, analysis) });
+            await sleep(160);
           }
+          send({ type: "status", stage: "publish", label: "Publishing four Pulse Cards…", pct: 98 });
           send({ type: "result", analysis });
           send({ type: "done", source: "cached", runId, ms: Date.now() - t0 });
           controller.close();
           return;
         }
 
-        // Live (agent | fast): run the engine while streaming heartbeat reasoning.
-        const enginePromise =
-          mode === "agent"
-            ? runAgentEngine(signalText, { id: fixture?.id })
-            : runFastEngine(signalText, { id: fixture?.id });
+        // ── LIVE MODE (fast | agent): run the 6-agent pipeline. The orchestrator
+        //    emits AgentEvents via onEvent; we forward each verbatim AND mirror a
+        //    legacy {type:"status"} so existing components keep working. The
+        //    orchestrator owns per-stage fallbacks and ALWAYS returns 4 cards.
+        const recentTitles = CURATED_SIGNALS.map((s) => ({ id: s.id, title: s.title }));
 
-        const work: Promise<Settled> = enginePromise
-          .then((r): Settled => ({ ok: true, analysis: r.analysis }))
-          .catch((e: unknown): Settled => ({
-            ok: false,
-            message: e instanceof Error ? e.message : String(e),
-          }));
+        const analysis = await runPipeline(freeSignal || undefined, {
+          mode, // "agent" => Scout via Antigravity; "fast" => Scout-fast
+          signalId,
+          fixture, // 4-card guarantee carrier
+          recentTitles, // for Editorial dedup
+          onEvent: (ev: AgentEvent) => {
+            send(ev); // 1) the new 6-agent tracker event, verbatim
+            // 2) mirror a legacy status event so ReasoningPanel still animates
+            if (ev.phase === "start" || ev.phase === "done" || ev.phase === "skipped") {
+              send({
+                type: "status",
+                stage: AGENT_TO_LEGACY_STAGE[ev.agent],
+                label: ev.label,
+                pct: ev.pct,
+              });
+            }
+          },
+        });
 
-        const tick = mode === "agent" ? 1600 : 900;
-        let settled: Settled | null = null;
-        let i = 0;
-        while (!settled) {
-          if (i < REASONING.length) {
-            const r = REASONING[i];
-            send({ type: "status", stage: r.stage, label: r.label, pct: r.pct, lens: r.lens });
-          } else {
-            const secs = ((Date.now() - t0) / 1000).toFixed(0);
-            const who = mode === "agent" ? "Ada (Antigravity)" : "Gemini";
-            send({ type: "status", stage: "work", label: `Still synthesizing with ${who}… ${secs}s`, pct: 99 });
-          }
-          i++;
-          settled = await Promise.race([work, sleep(tick).then(() => null)]);
-        }
-
-        if (settled.ok) {
-          send({ type: "result", analysis: settled.analysis });
-          send({ type: "done", source: mode, runId, ms: Date.now() - t0 });
-        } else {
-          send({ type: "fallback", reason: settled.message.slice(0, 160) });
-          const fb =
-            fixture ?? (mode === "agent" ? await runFastSafe(signalText) : null) ?? HERO;
-          send({ type: "result", analysis: fb });
-          send({ type: "done", source: "cached", runId, ms: Date.now() - t0 });
-        }
+        send({ type: "result", analysis });
+        send({ type: "done", source: mode, runId, ms: Date.now() - t0 });
         controller.close();
       } catch (err: unknown) {
+        // Outer catch-all: the orchestrator already does per-stage fallback, so this
+        // only fires on a truly unexpected throw. Never leave the user empty.
         const reason = err instanceof Error ? err.message : String(err);
         send({ type: "fallback", reason: reason.slice(0, 160) });
         send({ type: "result", analysis: fixture ?? HERO });
@@ -136,4 +140,23 @@ export async function POST(req: NextRequest) {
       Connection: "keep-alive",
     },
   });
+}
+
+// Compact "done" labels for the cached replay, sourced from the fixture so the
+// scripted run shows real numbers (confidence, pulse score, etc.).
+function scriptedDone(agent: AgentId, a: SignalAnalysis): string {
+  switch (agent) {
+    case "scout":
+      return `Locked a signal across ${a.disclosure.sources.length} sources`;
+    case "verify":
+      return a.confidence ? `Confidence ${a.confidence.score} — ${a.confidence.tier ?? "assessed"}` : "Credibility assessed";
+    case "rank":
+      return a.pulseScore ? `Pulse Score ${a.pulseScore.composite}/100` : "Pulse Score computed";
+    case "brief":
+      return "Master brief assembled";
+    case "lens":
+      return `Refracted into ${a.cards.length} lenses`;
+    case "editorial":
+      return a.editorial?.approved === false ? "Flagged for review — Rachel, EIC" : "Approved for publish — Rachel, EIC";
+  }
 }
