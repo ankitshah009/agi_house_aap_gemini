@@ -33,9 +33,10 @@ function buildPrompt(title: string, summary: string, brief?: string): string {
     "Ground every label in these facts (use them, do not invent companies or numbers):",
     ctx || title,
     "",
-    "STYLE: clean modern grid, generous whitespace, a restrained palette with a deep indigo accent on a soft near-white background, crisp sans-serif typography, subtle hairline dividers.",
-    "Every word must be real, correctly spelled English, legible, and meaningful. No gibberish, no lorem ipsum, no random letters.",
-    "No real brand logos, no photographs of real people, no watermarks, no signatures.",
+    "STYLE: clean modern grid on a DARK premium background (deep charcoal-navy, near-black), light text, with a vivid violet-to-blue accent and a subtle neon glow, crisp sans-serif typography, thin hairline dividers. Do NOT use a white or light background.",
+    "Every word must be real, correctly spelled English, legible, and meaningful.",
+    "FINAL CHECK before you finish: re-read every label, caption, and sentence in the image and confirm each one is coherent, grammatically correct, and actually makes sense in context, with NO duplicated words, no broken or nonsensical phrases, and no random characters. If any text fails, fix it.",
+    "No gibberish, no lorem ipsum, no random letters, no real brand logos, no photographs of real people, no watermarks, no signatures.",
   ].join("\n");
 }
 
@@ -51,8 +52,10 @@ function buildDigestPrompt(title: string, storiesText: string): string {
     "THE THREE STORIES (use these exactly, do not invent companies or numbers):",
     storiesText,
     "",
-    "STYLE: clean modern editorial diagram, generous whitespace, a restrained palette with a deep indigo accent on a soft near-white background, crisp sans-serif typography, thin connector lines and arrows to show the relationships.",
-    "Every word must be real, correctly spelled English, legible, and meaningful. No gibberish, no lorem ipsum, no real brand logos, no photographs of people, no watermarks.",
+    "STYLE: clean modern editorial diagram on a DARK premium background (deep charcoal-navy, near-black) with light text, a vivid violet-to-blue accent, and glowing connector lines and arrows to show the relationships, crisp sans-serif typography. Do NOT use a white or light background.",
+    "Every word must be real, correctly spelled English, legible, and meaningful.",
+    "FINAL CHECK before you finish: re-read every label, caption, and sentence and confirm each is coherent, grammatically correct, and actually makes sense in context, with NO duplicated words (for example never repeat a word like 'Today Today'), no broken or nonsensical phrases, and no random characters. If any text fails, fix it.",
+    "No gibberish, no lorem ipsum, no real brand logos, no photographs of people, no watermarks.",
   ].join("\n");
 }
 
