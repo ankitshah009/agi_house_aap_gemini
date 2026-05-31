@@ -1,9 +1,11 @@
-// Lens Engine backends. Server-only (reads the key).
+// Lens Engine backends. Server-only. All Gemini calls go through geminiFetch, which
+// fails over from the primary key to the backup on auth/quota errors.
 //  runAgentEngine -> Antigravity managed agent (raw REST, verified-live path; browses sources)
 //  runFastEngine  -> gemini structured output (fast, deterministic)
 
 import "server-only";
 import { serverEnv } from "./env";
+import { geminiFetch } from "./gemini";
 import { buildAgentInput, buildFastBody } from "./prompt";
 import { parseAnalysis, safeParseObject } from "./parse";
 import { buildAgentBody, buildAgentInteractionInput } from "./pipeline/prompts";
@@ -48,15 +50,9 @@ export async function runAgentEngine(
   signalText: string,
   opts: { id?: string } = {},
 ): Promise<RunResult> {
-  const key = serverEnv.geminiApiKey;
-  if (!key) throw new Error("GEMINI_API_KEY missing");
-  const res = await fetch(`${BASE}/v1beta/interactions`, {
+  const res = await geminiFetch(`${BASE}/v1beta/interactions`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": key,
-      "Api-Revision": "2026-05-20",
-    },
+    headers: { "Content-Type": "application/json", "Api-Revision": "2026-05-20" },
     body: JSON.stringify({
       agent: "antigravity-preview-05-2026",
       input: buildAgentInput(signalText),
@@ -86,17 +82,12 @@ export async function runFastEngine(
   signalText: string,
   opts: { id?: string } = {},
 ): Promise<RunResult> {
-  const key = serverEnv.geminiApiKey;
-  if (!key) throw new Error("GEMINI_API_KEY missing");
-  const res = await fetch(
-    `${BASE}/v1beta/models/${serverEnv.fastModel}:generateContent`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify(buildFastBody(signalText)),
-      signal: AbortSignal.timeout(serverEnv.fastTimeoutMs),
-    },
-  );
+  const res = await geminiFetch(`${BASE}/v1beta/models/${serverEnv.fastModel}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(buildFastBody(signalText)),
+    signal: AbortSignal.timeout(serverEnv.fastTimeoutMs),
+  });
   if (!res.ok) {
     const t = await res.text().catch(() => "");
     throw new Error(`Gemini HTTP ${res.status}: ${t.slice(0, 200)}`);
@@ -125,20 +116,15 @@ export async function generateText(
   userPrompt: string,
   timeoutMs = 40_000,
 ): Promise<string> {
-  const key = serverEnv.geminiApiKey;
-  if (!key) throw new Error("GEMINI_API_KEY missing");
-  const res = await fetch(
-    `${BASE}/v1beta/models/${serverEnv.fastModel}:generateContent`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-      }),
-      signal: AbortSignal.timeout(timeoutMs),
-    },
-  );
+  const res = await geminiFetch(`${BASE}/v1beta/models/${serverEnv.fastModel}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
   if (!res.ok) {
     const t = await res.text().catch(() => "");
     throw new Error(`Gemini HTTP ${res.status}: ${t.slice(0, 200)}`);
@@ -148,9 +134,8 @@ export async function generateText(
 }
 
 // ── 6-AGENT PIPELINE RUNNERS ────────────────────────────────────────────────
-// These power lib/pipeline/orchestrate.ts. They reuse the SAME extractors
-// (extractFastText / extractAgentText) and the SAME robust JSON recovery
-// (safeParseObject) as the legacy single-call path — no new parsing surface.
+// These power lib/pipeline/orchestrate.ts. They reuse the SAME extractors and the
+// SAME robust JSON recovery (safeParseObject) as the legacy single-call path.
 
 export interface StageResult {
   raw: string;
@@ -158,24 +143,18 @@ export interface StageResult {
   interactionId?: string;
 }
 
-// Generic structured stage call (Agents 2-6, and Scout in "fast" mode):
-// POST {fastModel}:generateContent with the agent's responseSchema, then recover JSON.
+// Generic structured stage call (Agents 2-6, and Scout in "fast" mode).
 export async function runStructuredStage(
   agent: AgentId,
   ctxJson: string,
   opts: { timeoutMs?: number } = {},
 ): Promise<StageResult> {
-  const key = serverEnv.geminiApiKey;
-  if (!key) throw new Error("GEMINI_API_KEY missing");
-  const res = await fetch(
-    `${BASE}/v1beta/models/${serverEnv.fastModel}:generateContent`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify(buildAgentBody(agent, ctxJson)),
-      signal: AbortSignal.timeout(opts.timeoutMs ?? serverEnv.stageTimeoutMs),
-    },
-  );
+  const res = await geminiFetch(`${BASE}/v1beta/models/${serverEnv.fastModel}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(buildAgentBody(agent, ctxJson)),
+    signal: AbortSignal.timeout(opts.timeoutMs ?? serverEnv.stageTimeoutMs),
+  });
   if (!res.ok) {
     const t = await res.text().catch(() => "");
     throw new Error(`Gemini HTTP ${res.status}: ${t.slice(0, 200)}`);
@@ -191,15 +170,9 @@ export async function runScoutAgent(
   ctxJson: string,
   opts: { timeoutMs?: number } = {},
 ): Promise<StageResult> {
-  const key = serverEnv.geminiApiKey;
-  if (!key) throw new Error("GEMINI_API_KEY missing");
-  const res = await fetch(`${BASE}/v1beta/interactions`, {
+  const res = await geminiFetch(`${BASE}/v1beta/interactions`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": key,
-      "Api-Revision": "2026-05-20",
-    },
+    headers: { "Content-Type": "application/json", "Api-Revision": "2026-05-20" },
     body: JSON.stringify({
       agent: "antigravity-preview-05-2026",
       input: buildAgentInteractionInput("scout", ctxJson),
