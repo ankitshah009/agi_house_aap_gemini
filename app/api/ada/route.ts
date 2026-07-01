@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { generateText } from "@/lib/agent";
+import { guardApi } from "@/lib/apiGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,6 +9,9 @@ export const maxDuration = 60;
 const SYSTEM = `You are Ada, the AI research analyst behind "Ad AI Pulse". A professional is asking a follow-up question about a brief you produced. Answer concisely (<= 110 words), tactically, and grounded in the provided brief context. When relevant, point to the right lens — Agency Strategist, Executive Strategy, Adtech & GTM, or Responsible AI & Policy. Speak as Ada: confident, specific, no fluff. Do not invent facts beyond the brief; if something isn't covered, say what you'd check.`;
 
 export async function POST(req: NextRequest) {
+  const denied = await guardApi(req, "ada");
+  if (!denied.ok) return denied.response;
+
   let body: Record<string, unknown> = {};
   try {
     body = (await req.json()) as Record<string, unknown>;

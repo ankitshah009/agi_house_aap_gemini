@@ -9,8 +9,11 @@ export async function GET() {
     status: "ok",
     hasApiKey: hasGeminiKey(),
     fastModel: serverEnv.fastModel,
+    imageModel: serverEnv.imageModel,
     forceCache: serverEnv.forceCache,
     defaultMode: serverEnv.defaultMode,
+    authEnabled: serverEnv.workosEnabled,
+    authRequired: serverEnv.authRequired,
     timestamp: new Date().toISOString(),
   });
 }

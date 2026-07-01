@@ -23,7 +23,7 @@ export default function ModeSwitcher({
     <div
       role="tablist"
       aria-label="Choose how to consume today's intelligence"
-      className="flex flex-wrap gap-2"
+      className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-none"
     >
       {MODES.map((m) => {
         const Icon = m.icon;
@@ -34,7 +34,7 @@ export default function ModeSwitcher({
             role="tab"
             aria-selected={on}
             onClick={() => onMode(m.id)}
-            className={`inline-flex items-center gap-2 rounded-lg border px-4 min-h-12 text-sm transition-colors duration-fast ${
+            className={`inline-flex shrink-0 snap-start items-center gap-2 rounded-lg border px-4 min-h-12 text-sm transition-colors duration-fast ${
               on
                 ? "border-accent bg-accent text-accent-ink glow-accent"
                 : "border-border bg-surface text-ink-muted hover:text-ink hover:border-border-strong"

@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono, Sora } from "next/font/google";
+import AuthProvider from "@/components/AuthProvider";
 import "./globals.css";
 
 // ONE primary sans (Inter — the de-facto product-UI typeface) + ONE mono (Geist Mono,
@@ -31,6 +32,18 @@ export const metadata: Metadata = {
   title: "Ad AI Pulse — From Signal to Strategy",
   description:
     "AI-native intelligence for the AdTech and AI economy. The AAP Lens Engine turns one signal into four role-specific decisions. Produced by Ada, reviewed by Rachel.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Ad AI Pulse",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#1a1625",
 };
 
 export default function RootLayout({
@@ -38,7 +51,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-theme="dark" className={`${inter.variable} ${geistMono.variable} ${sora.variable}`}>
-      <body className="min-h-screen bg-canvas text-ink antialiased">{children}</body>
+      <body className="min-h-screen bg-canvas text-ink antialiased safe-area-x safe-area-b">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

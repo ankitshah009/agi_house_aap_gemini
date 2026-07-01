@@ -284,6 +284,21 @@
   }
 }
 
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@utility safe-area-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@utility safe-area-b {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* prefers-reduced-motion: kill all motion, keep final state. REQUIRED. */
 @media (prefers-reduced-motion: reduce) {
   *,

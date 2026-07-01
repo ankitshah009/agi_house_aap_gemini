@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Square, Mic } from "lucide-react";
-import type { DailyBrief, SignalAnalysis } from "@/lib/types";
+import type { DailyBrief, SignalAnalysis, LensId } from "@/lib/types";
+import { buildDailyView } from "@/lib/dailyBrief";
 
 // ── Script helpers ──────────────────────────────────────────────────────────
 
@@ -42,11 +43,10 @@ function headlineLead(title: string): string {
   return clean(title).replace(/[.!?]+$/, "");
 }
 
-// Build ONE combined ~45-75s Rachel script from the top 3 signals.
-function buildScript(signals: SignalAnalysis[]): string {
+// Build ONE combined ~45-75s Rachel script from the top 3 signals + lens through-line.
+function buildScript(signals: SignalAnalysis[], dailyView: ReturnType<typeof buildDailyView>): string {
   const top3 = signals.slice(0, 3);
-  const intro =
-    "Here is your Ad AI Pulse briefing for today. Three stories matter.";
+  const intro = `Here is your Ad AI Pulse briefing for today, framed for ${dailyView.lensLabel}. ${dailyView.through}`;
 
   const ordinals = ["First", "Second", "Third"];
   const bodies = top3.map((s, i) => {
@@ -71,10 +71,15 @@ function buildScript(signals: SignalAnalysis[]): string {
 
 export interface VoiceBriefProps {
   brief: DailyBrief;
+  lensId?: LensId;
 }
 
-export default function VoiceBrief({ brief }: VoiceBriefProps) {
-  const script = useMemo(() => buildScript(brief.signals), [brief.signals]);
+export default function VoiceBrief({ brief, lensId = "strategist" }: VoiceBriefProps) {
+  const dailyView = useMemo(() => buildDailyView(lensId), [lensId]);
+  const script = useMemo(
+    () => buildScript(brief.signals, dailyView),
+    [brief.signals, dailyView],
+  );
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -175,7 +180,7 @@ export default function VoiceBrief({ brief }: VoiceBriefProps) {
               </span>
             </div>
             <p className="mt-1 max-w-md text-sm text-ink-muted">
-              The day&rsquo;s top three stories, read aloud.
+              The day&rsquo;s top three stories for {dailyView.lensLabel}, read aloud.
             </p>
           </div>
         </div>

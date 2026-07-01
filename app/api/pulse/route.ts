@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { CURATED_SIGNALS } from "@/lib/data";
 import { serverEnv } from "@/lib/env";
+import { guardApi } from "@/lib/apiGuard";
 import { runFastSafe } from "@/lib/agent";
 import { runPipeline } from "@/lib/pipeline/orchestrate";
 import {
@@ -34,6 +35,9 @@ const AGENT_TO_LEGACY_STAGE: Record<AgentId, PipelineStage> = {
 };
 
 export async function POST(req: NextRequest) {
+  const denied = await guardApi(req, "pulse");
+  if (!denied.ok) return denied.response;
+
   let body: Record<string, unknown> = {};
   try {
     body = (await req.json()) as Record<string, unknown>;
