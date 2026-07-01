@@ -1,13 +1,14 @@
 import type { NextRequest } from "next/server";
 import { geminiFetch } from "@/lib/gemini";
 import { serverEnv, hasGeminiKey } from "@/lib/env";
+import { guardApi } from "@/lib/apiGuard";
+import { getCachedImage, imageCacheKey, setCachedImage } from "@/lib/imageCache";
 
-// Infographic generation via Nano Banana Pro (Gemini 3 Pro Image), with a 2.5-flash-image
-// fallback. Key failover (primary -> backup) is handled by geminiFetch.
-// NEVER 500 the user: on ANY failure we return 200 { dataUrl: null, error }.
+// Infographic generation via Nano Banana (2.5 Flash Image) with optional Pro upgrade.
+// Server-side cache avoids repeat Gemini calls for the same digest/signal.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // Pro image gen can take 15-30s
+export const maxDuration = 300;
 
 const BASE = "https://generativelanguage.googleapis.com";
 
@@ -98,6 +99,9 @@ async function tryModel(
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await guardApi(req, "infographic");
+  if (!denied.ok) return denied.response;
+
   let body: Json = {};
   try {
     body = (await req.json()) as Json;
@@ -119,13 +123,24 @@ export async function POST(req: NextRequest) {
   const kind = body.kind === "digest" ? "digest" : "signal";
   const prompt = kind === "digest" ? buildDigestPrompt(title, summary) : buildPrompt(title, summary, brief);
 
-  // 1) Nano Banana Pro. 2) flash fallback. Either may be swallowed; the client shows a
-  //    tasteful placeholder rather than an error.
+  const cacheKey = imageCacheKey([kind, title, summary, brief ?? ""]);
+  const cached = getCachedImage(cacheKey);
+  if (cached) return Response.json({ dataUrl: cached, model: "cache" });
+
+  const usePro = process.env.GEMINI_IMAGE_USE_PRO === "1";
+  const models = usePro
+    ? [serverEnv.imageUpgradeModel, serverEnv.imageModel, serverEnv.imageFallbackModel]
+    : [serverEnv.imageModel, serverEnv.imageFallbackModel];
+
   try {
-    const pro = await tryModel(serverEnv.imageModel, prompt, 250_000).catch(() => null);
-    if (pro) return Response.json({ dataUrl: pro, model: serverEnv.imageModel });
-    const fb = await tryModel(serverEnv.imageFallbackModel, prompt, 90_000).catch(() => null);
-    if (fb) return Response.json({ dataUrl: fb, model: serverEnv.imageFallbackModel });
+    for (const model of models) {
+      const timeout = model.includes("pro") || model.startsWith("gemini-3") ? 250_000 : 90_000;
+      const url = await tryModel(model, prompt, timeout).catch(() => null);
+      if (url) {
+        setCachedImage(cacheKey, url);
+        return Response.json({ dataUrl: url, model });
+      }
+    }
     return Response.json({ dataUrl: null, error: "No image returned" });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Image generation failed";

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AapLogo from "./AapLogo";
+import UserMenu from "./UserMenu";
 
 export default function BrandHeader() {
   const [scrolled, setScrolled] = useState(false);
@@ -15,7 +16,7 @@ export default function BrandHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur-md px-6 py-4 transition-shadow${
+      className={`sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur-md px-4 md:px-6 py-3 md:py-4 safe-area-x transition-shadow${
         scrolled ? " shadow-e2" : ""
       }`}
     >
@@ -34,12 +35,13 @@ export default function BrandHeader() {
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 md:gap-4">
           <span className="inline-flex min-h-9 items-center gap-1.5 rounded-pill border border-border bg-surface px-3 py-1.5">
             <span className="status-live h-1.5 w-1.5 rounded-full bg-success" />
             <span className="text-2xs text-ink-muted">Ada active</span>
           </span>
-          <span className="hidden text-2xs font-mono uppercase tracking-wider text-ink-faint sm:inline">
+          <UserMenu />
+          <span className="hidden text-2xs font-mono uppercase tracking-wider text-ink-faint lg:inline">
             Reviewed by the AAP Engine
           </span>
         </div>

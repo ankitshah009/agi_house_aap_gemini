@@ -11,19 +11,31 @@ function readMode(v: string | undefined): EngineMode {
 const primaryKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? "";
 const backupKey = process.env.GEMINI_API_KEY_BACKUP ?? "";
 
+const workosEnabled = Boolean(
+  process.env.WORKOS_API_KEY &&
+    process.env.WORKOS_CLIENT_ID &&
+    process.env.WORKOS_COOKIE_PASSWORD,
+);
+
 export const serverEnv = {
   geminiApiKey: primaryKey,
   geminiApiKeyBackup: backupKey,
   // Primary first, then backup; deduped, non-empty. geminiFetch fails over across these
   // on auth/quota errors so a rate-limited primary key cannot kill a live demo.
   geminiApiKeys: [primaryKey, backupKey].filter((k, i, a) => k.length > 0 && a.indexOf(k) === i),
+  workosEnabled,
+  // When true + WorkOS configured, unauthenticated users are redirected to AuthKit.
+  authRequired: process.env.AUTH_REQUIRED === "1",
   // Kill-switch: force cached output regardless of client request (flaky-wifi insurance).
   forceCache: process.env.DEMO_FORCE_CACHE === "1",
   defaultMode: readMode(process.env.DEMO_DEFAULT_MODE),
   fastModel: process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash",
   ttsModel: process.env.GEMINI_TTS_MODEL ?? "gemini-2.5-flash-preview-tts",
-  // Nano Banana Pro (Gemini 3 Pro Image): best legible text, served on v1alpha (see gemini.ts).
-  imageModel: process.env.GEMINI_IMAGE_MODEL ?? "gemini-3-pro-image-preview",
+  // Nano Banana (2.5 Flash Image) first — free-tier friendly (~500 RPD on AI Studio).
+  // Pro image is opt-in via GEMINI_IMAGE_UPGRADE_MODEL for higher legibility when budget allows.
+  imageModel: process.env.GEMINI_IMAGE_MODEL ?? "gemini-2.5-flash-image",
+  imageUpgradeModel:
+    process.env.GEMINI_IMAGE_UPGRADE_MODEL ?? "gemini-3-pro-image-preview",
   imageFallbackModel: process.env.GEMINI_IMAGE_FALLBACK_MODEL ?? "gemini-2.5-flash-image",
   agentTimeoutMs: Number(process.env.PULSE_TIMEOUT_MS ?? 150_000),
   fastTimeoutMs: Number(process.env.FAST_TIMEOUT_MS ?? 60_000),

@@ -22,14 +22,14 @@ export default function PersonaSelector({
   onPersona: (p: Persona) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Choose your role">
+    <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto sm:pb-1 scrollbar-none" role="group" aria-label="Choose your role">
       <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted shrink-0">
         <Users className="h-3.5 w-3.5" aria-hidden="true" /> I am a
       </span>
       <button
         onClick={() => onPersona("all")}
         aria-pressed={persona === "all"}
-        className={`min-h-9 rounded-full border px-3 text-xs font-medium transition-colors duration-fast ${
+        className={`min-h-9 shrink-0 rounded-full border px-3 text-xs font-medium transition-colors duration-fast ${
           persona === "all"
             ? "border-accent bg-accent text-accent-ink glow-accent"
             : "border-border bg-surface text-ink-muted hover:text-ink"
@@ -44,7 +44,7 @@ export default function PersonaSelector({
             key={l.id}
             onClick={() => onPersona(l.id)}
             aria-pressed={on}
-            className={`min-h-9 inline-flex items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors duration-fast ${
+            className={`min-h-9 shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors duration-fast ${
               on ? CHIP[l.id] : "border-border bg-surface text-ink-muted hover:text-ink"
             }`}
           >

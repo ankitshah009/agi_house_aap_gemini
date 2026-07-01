@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Sparkles } from "lucide-react";
 import { CURATED_SIGNALS } from "@/lib/data";
 import { TODAY } from "@/lib/daily";
+import { buildAllDailyViews } from "@/lib/dailyBrief";
 import { LENSES, LENS_BY_ID } from "@/lib/lenses";
+import { viewFromAnalysis } from "@/lib/pulseSignal";
 import type { EngineMode, LensId, MasterBrief as MasterBriefData, SignalAnalysis } from "@/lib/types";
 import { usePulseStream } from "@/hooks/usePulseStream";
 import BrandHeader from "./BrandHeader";
@@ -27,6 +29,9 @@ import VoiceBrief from "./VoiceBrief";
 import ModeSwitcher, { type BriefMode } from "./ModeSwitcher";
 import PersonaSelector, { type Persona } from "./PersonaSelector";
 import ReadFocus from "./ReadFocus";
+import DailyLensRail from "./DailyLensRail";
+import CrossSignalSynthesis from "./CrossSignalSynthesis";
+import PulseCard from "./PulseCard";
 
 // Active lens-filter chip colors (functional category color; static for Tailwind).
 const LENS_CHIP: Record<LensId, string> = {
@@ -62,9 +67,11 @@ export default function PulseConsole() {
   const [persona, setPersona] = useState<Persona>("all");
   const [selectedId, setSelectedId] = useState<string>(CURATED_SIGNALS[0].id);
   const [activeLens, setActiveLens] = useState<"all" | LensId>("all");
+  const [synthesisLens, setSynthesisLens] = useState<LensId>("strategist");
   const [customSignals, setCustomSignals] = useState<SignalAnalysis[]>([]);
   const pendingCustomRef = useRef(false);
   const modeRef = useRef<HTMLElement | null>(null);
+  const dailyViews = useMemo(() => buildAllDailyViews(), []);
 
   const analysis = stream.analysis;
   const busy = stream.phase === "reasoning";
@@ -100,6 +107,7 @@ export default function PulseConsole() {
   const onPersona = (p: Persona) => {
     setPersona(p);
     setActiveLens(p);
+    if (p !== "all") setSynthesisLens(p);
   };
 
   const onPlayground = (text: string) => {
@@ -112,6 +120,10 @@ export default function PulseConsole() {
   const sourceLabel =
     stream.source === "agent" ? "Ada · Live" : stream.source === "fast" ? "Gemini" : "Cached";
   const brief = toBrief(analysis);
+  const pulseView = useMemo(() => viewFromAnalysis(analysis), [analysis]);
+  const cardLens =
+    activeLens !== "all" ? activeLens : synthesisLens;
+  const activeCardLens = pulseView.lensById[cardLens] ?? pulseView.lenses[0];
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
@@ -171,11 +183,23 @@ export default function PulseConsole() {
       >
         {/* VISUAL — combined "today's 3 moves + dynamics" digest, ~60s */}
         {briefMode === "visual" && (
-          <DailyDigest brief={TODAY} onDeepDive={onDeepDive} />
+          <div className="flex flex-col gap-5">
+            <DailyLensRail
+              views={dailyViews}
+              active={synthesisLens}
+              onChange={setSynthesisLens}
+            />
+            <CrossSignalSynthesis view={dailyViews[synthesisLens]} />
+            <DailyDigest
+              brief={TODAY}
+              dailyView={dailyViews[synthesisLens]}
+              onDeepDive={onDeepDive}
+            />
+          </div>
         )}
 
         {/* VOICE — Rachel reads today's top stories */}
-        {briefMode === "voice" && <VoiceBrief brief={TODAY} />}
+        {briefMode === "voice" && <VoiceBrief brief={TODAY} lensId={synthesisLens} />}
 
         {/* VIDEO — short Rachel video brief (optional / nice-to-have) */}
         {briefMode === "video" && (
@@ -199,7 +223,7 @@ export default function PulseConsole() {
             />
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* LEFT RAIL */}
-            <div className="lg:col-span-4 flex flex-col gap-5">
+            <div className="lg:col-span-4 flex flex-col gap-5 order-2 lg:order-1">
               <SignalFeed
                 signals={allSignals}
                 selectedId={selectedId}
@@ -213,7 +237,7 @@ export default function PulseConsole() {
             </div>
 
             {/* RIGHT — the deep read */}
-            <div className="lg:col-span-8 flex flex-col gap-5">
+            <div className="lg:col-span-8 flex flex-col gap-5 order-1 lg:order-2">
               {stream.fallback && (
                 <div className="flex items-center gap-2 rounded-md border border-border bg-warning-soft px-3 py-2 text-sm text-ink">
                   <AlertTriangle className="h-4 w-4 text-warning shrink-0" aria-hidden="true" />
@@ -238,6 +262,15 @@ export default function PulseConsole() {
               </div>
 
               <MasterBrief brief={brief} confidence={analysis.confidence} />
+
+              {activeCardLens && (
+                <PulseCard
+                  signal={pulseView.signal}
+                  lens={activeCardLens}
+                  disclosure={pulseView.disclosure}
+                />
+              )}
+
               <InfographicCard
                 key={analysis.id}
                 title={analysis.title}

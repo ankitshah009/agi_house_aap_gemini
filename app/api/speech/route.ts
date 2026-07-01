@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { serverEnv } from "@/lib/env";
+import { guardApi } from "@/lib/apiGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,6 +36,9 @@ function pcmToWavBase64(pcmB64: string, sampleRate: number): string {
 
 // Returns 404 on any problem so the client cleanly falls back to browser Web Speech.
 export async function POST(req: NextRequest) {
+  const denied = await guardApi(req, "speech");
+  if (!denied.ok) return denied.response;
+
   let body: Json = {};
   try {
     body = (await req.json()) as Json;

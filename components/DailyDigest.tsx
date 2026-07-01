@@ -2,12 +2,14 @@
 
 import { ArrowRight, Sparkles, Square, TrendingUp } from "lucide-react";
 import type { DailyBrief, SignalAnalysis } from "@/lib/types";
+import type { DailyView } from "@/lib/dailyBrief";
 import { LENS_BY_ID } from "@/lib/lenses";
 import InfographicCard from "./InfographicCard";
 
 // ─── Prop interface ────────────────────────────────────────────────────────────
 export interface DailyDigestProps {
   brief: DailyBrief;
+  dailyView?: DailyView;
   onDeepDive: (id: string) => void;
 }
 
@@ -80,15 +82,14 @@ function scoreChipClass(score: number): string {
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
-export default function DailyDigest({ brief, onDeepDive }: DailyDigestProps) {
+export default function DailyDigest({ brief, dailyView, onDeepDive }: DailyDigestProps) {
   const signals = brief.signals.slice(0, 3);
 
-  // Build the numbered list for the infographic image prompt.
-  const infographicSummary = signals
-    .map((s, i) => `${i + 1}. ${s.title}`)
-    .join("\n");
+  const infographicSummary = dailyView
+    ? dailyView.movers.map((m, i) => `${i + 1}. ${m.company}: ${m.move}`).join("\n")
+    : signals.map((s, i) => `${i + 1}. ${s.title}`).join("\n");
 
-  const bottomLine = deriveBottomLine(signals);
+  const bottomLine = dailyView?.through ?? deriveBottomLine(signals);
 
   return (
     <article
